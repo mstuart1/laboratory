@@ -33,22 +33,14 @@ done <- fish %>%
 
 todo <- anti_join(fish, done)
 
-# are there any reasons why these haven't been done?  Check the notes - there are no notes about why these haven't been done in the leyte table and they do not appear in the laboratory table, so it is a mystery for any samples from earlier years.  Oh!  Check the old db.
-old <- dbReadTable(leyte, "clownfish_old") %>% 
-  select(sample_id, Notes) %>% 
-  filter(!is.na(sample_id))
-todo <- left_join(todo, old, by = "sample_id")
-dbDisconnect(leyte)
-rm(leyte)
-
-
 # remove samples that cannot be extracted
 errors <- c("APCL12_271", "APCL13_024", "APCL13_547", "APCL13_549", "APCL13_551", "APCL13_553", "APCL14_030", "APCL14_157", "APCL14_161", "APCL14_164", "APCL14_301", "APCL14_304", "APCL14_305", "APCL14_306", "APCL14_492", "APCL14_494", "APCL15_355550", "APCL15_404305", "APCL15_405807")
 rem <- todo %>% 
   filter(sample_id %in% errors)
 todo <- anti_join(todo, rem)
 
-todo <- select(todo, sample_id)
+todo <- select(todo, sample_id) %>% 
+  arrange(sample_id)
 
 
 # how many plates would these make, 94 samples plus 2 blanks per plate
@@ -96,7 +88,7 @@ for (i in 1:nplates){
 }
 
 # put the samples in order of extraction (with negative controls inserted)
-extr <- arrange(extr, well)
+extr <- arrange(extr, sample_id)
 extr$sample_id <- as.character(extr$sample_id)
 
 #### make a plate map of sample IDs (for knowing where to place fin clips) ####
