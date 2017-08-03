@@ -55,7 +55,7 @@ todo <- select(todo, sample_id)
 (nplates <- floor(nrow(todo)/94)) # extra parenthesis are to print
 
 # define wells
-well <- 1:(94*nplates)
+well <- 1:(96*nplates)
 
 # separate list of samples out into plates
 
