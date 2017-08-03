@@ -136,7 +136,20 @@ extr <- extr %>%
   mutate(corr_date = NA) %>% 
   select(extraction_id, sample_id, date, method, final_vol, quant, DNA_ug, gel, well, plate, notes, correction, corr_message, corr_editor, corr_date)
 
-# check to make sure there are no errors
+# change plate name to match extraction range
+for (i in 1:nplates){
+  x <- paste("plate", i, sep = "")
+  blip <- extr %>% 
+    filter(plate == x)
+  if (nrow(blip) > 0){
+    extr <- anti_join(extr, blip) # remove these rows from extr
+    a <- min(blip$extraction_id)
+    b <- max(blip$extraction_id)
+    blip$plate <- paste(a, "-", b, sep = "")
+    extr <- rbind(extr, blip) # add rows back in to extr
+  }
+}
+  
 
   
 ### import the extract_list into the database ####
