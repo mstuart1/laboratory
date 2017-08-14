@@ -101,11 +101,11 @@ for (i in 1:nrow(platelist)){
     select(Row, Col, sample_id)
   
   platemap <- as.matrix(reshape2::acast(plate, plate[,1] ~ plate[,2]), value.var = plate[,3])
-  write.csv(platemap, file = paste(Sys.Date(), "extract_map", i, ".csv", sep = ""))
+  write.csv(platemap, file = paste("./maps/",Sys.Date(), "extract_map", i, ".csv", sep = ""))
 }
 
 ### ONLY DO THIS ONCE ### generate extract numbers for database ####
-lab <- dbConnect(MySQL(), "Laboratory", default.file = path.expand("~/myconfig.cnf"), port = 3306, create = F, host = NULL, user = NULL, password = NULL)
+# lab <- dbConnect(MySQL(), "Laboratory", default.file = path.expand("~/myconfig.cnf"), port = 3306, create = F, host = NULL, user = NULL, password = NULL)
 
 # get the last number used for extract and add extraction_id
 extracted <- dbReadTable(lab, "extraction")
@@ -153,7 +153,7 @@ for (i in 1:nplates){
 
   
 ### import the extract_list into the database ####
-lab <- dbConnect(MySQL(), "Laboratory", default.file = path.expand("~/myconfig.cnf"), port = 3306, create = F, host = NULL, user = NULL, password = NULL)
+# lab <- dbConnect(MySQL(), "Laboratory", default.file = path.expand("~/myconfig.cnf"), port = 3306, create = F, host = NULL, user = NULL, password = NULL)
 
 dbWriteTable(lab, "extraction", extr, row.names = F, overwrite = F, append = T)
 
