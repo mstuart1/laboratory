@@ -112,9 +112,15 @@ extracted <- dbReadTable(lab, "extraction")
 dbDisconnect(lab)
 rm(lab)
 
+extr <- extr %>% 
+  arrange(sample_id, well)
+
 x <- as.numeric(max(substr(extracted$extraction_id, 2,5))) + 1
 
-extr$extraction_id <- paste("E", (as.numeric(extr$well) + x), sep = "")
+for (i in 1:nrow(extr)){
+  y <- x + well[i]
+  extr$extraction_id[i] <- paste("E", y, sep = "")
+}
 
 # combine Row and Col into plate well
 extr$well <- paste(extr$Row, extr$Col, sep = "")
@@ -143,8 +149,8 @@ for (i in 1:nplates){
     filter(plate == x)
   if (nrow(blip) > 0){
     extr <- anti_join(extr, blip) # remove these rows from extr
-    a <- min(blip$extraction_id)
-    b <- max(blip$extraction_id)
+    a <- blip %>% filter(well == "A1") %>% select(extraction_id)
+    b <- blip %>% filter(well == "H12") %>% select(extraction_id)
     blip$plate <- paste(a, "-", b, sep = "")
     extr <- rbind(extr, blip) # add rows back in to extr
   }
