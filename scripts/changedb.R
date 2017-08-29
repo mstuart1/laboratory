@@ -25,8 +25,8 @@ extr <- rbind(extr, change)
 
 # write the changes to the db
 ################### BE CAREFUL ########################################
-dbWriteTable(lab, "extraction", extr, row.names = F, overwrite = T)
-
-dbDisconnect(lab)
-rm(lab)
+# dbWriteTable(lab, "extraction", extr, row.names = F, overwrite = T)
+# 
+# dbDisconnect(lab)
+# rm(lab)
 
