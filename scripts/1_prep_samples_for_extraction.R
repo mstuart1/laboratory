@@ -112,10 +112,13 @@ extracted <- dbReadTable(lab, "extraction")
 dbDisconnect(lab)
 rm(lab)
 
-extr <- extr %>% 
-  arrange(sample_id, well)
+extracted <- extracted %>% 
+  filter(sample_id != "XXXX")
 
-x <- as.numeric(max(substr(extracted$extraction_id, 2,5))) + 1
+extr <- extr %>% 
+  arrange(sample_id, well) 
+
+x <- as.numeric(max(substr(extracted$extraction_id, 2,5)))
 
 for (i in 1:nrow(extr)){
   y <- x + well[i]
