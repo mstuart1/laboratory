@@ -3,7 +3,9 @@ library(dplyr)
 library(RMySQL)
 
 # what types of samples are these
+# table = "extraction"
 table = "digest"
+# table = "ligation"
 
 # which plate is it?
 range = "D3247-D3339"
@@ -13,6 +15,7 @@ range = "D3247-D3339"
 platefile1 = "/Users/macair/Google Drive/Pinsky Lab/Plate Reader/2016_09/20160919_plate1.txt"
 # colsinplate1 = 2:12 # is this a full plate?
 
+# skip the lines before the data
 strs <- readLines(platefile1, skipNul = T)
 linestoskip = (which(strs == "Group: Unk_Dilution")) # the number of lines to skip
 
@@ -25,9 +28,10 @@ dat1 <- dat1[1:(which(dat1$Sample == "Group Summaries")-1), ]
 # read in names for the samples
 lab <- dbConnect(MySQL(), "Laboratory", default.file = path.expand("~/myconfig.cnf"), port = 3306, create = F, host = NULL, user = NULL, password = NULL)
 
+# all of the data in the db for this table
 dat <- dbReadTable(lab, table)
 
-# choose a plate 
+# select your desired plate
 plate <- dat %>% 
   select(contains("id"), well, plate) %>% 
   filter(plate == range) %>% 
