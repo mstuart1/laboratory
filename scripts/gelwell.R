@@ -9,7 +9,7 @@ pipet <- 12
 # pipet <- 1
 
 # 2. Define plate ####
-range <- "E3161-E3254"
+range <- "E3443-E3536"
 
 # 3. Connect to db
 lab <- src_mysql(dbname = "Laboratory", default.file = path.expand("~/myconfig.cnf"), port = 3306, create = F, host = NULL, user = NULL, password = NULL)
@@ -70,5 +70,8 @@ if (pipet == "12"){
   set4 <- rbind(set4, set4b)
   (row2b <- set4$extraction_id)
   
-
 }
+row1a
+row1b
+row2a
+row2b
