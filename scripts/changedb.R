@@ -14,10 +14,13 @@ extr <- lab %>% dbReadTable("extraction") %>% collect()
 
 # change the values for a group of samples - this pulls out only the few that fit the filter
 change <- extr %>% 
-  filter(plate == "E3631-E3724") %>% 
+  filter(plate == "E3349-E3442") %>% 
   # mutate(notes = "fins have been loaded into plates and lysed")
   # mutate(date = "2017-08-29", notes = "")
-  mutate(gel = "2017-09-07")
+  mutate(gel = "2017-09-08")
+  # filter(extraction_id == "E3257" | extraction_id == "E3260" | extraction_id == "E3267") %>% 
+  # mutate(notes = "no band on gel") # made sure to check that no pre-existing notes present
+
 
 # remove those few from the whole group (the extraction ids are for prechange rows)
 extr <- anti_join(extr, change, by = "extraction_id")
