@@ -10,7 +10,7 @@ plate <- lab %>%
   # THIS IS WHERE YOU MUST ENTER THE SPECIFICS OF WHAT YOU WANT - extractions, range, etc?
   tbl("extraction") %>% 
   select(sample_id, extraction_id, well, plate) %>% 
-  filter(plate == "E3819-E3912") %>% 
+  filter(plate == "E4007-E4100") %>% 
   collect()
 
 # split the well out into row and column again
@@ -25,10 +25,4 @@ plate <- as.data.frame(plate)
 
 # make map
 platemap <- as.matrix(reshape2::acast(plate,plate[,1] ~ plate[,2]))
-write.csv(platemap, file = paste("./maps/",Sys.Date(), "map_from_db.csv", sep = ""))
-
-
-
-
-
-
+# write.csv(platemap, file = paste("./maps/",Sys.Date(), "map_from_db.csv", sep = ""))
