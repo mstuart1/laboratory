@@ -1,12 +1,13 @@
 # This is a script for adding samples that are not in the laboratory database and have not been extracted yet
 library(RMySQL)
 library(dplyr)
+source("scripts/lab_helpers.R")
 
 
 #### obtain a list of all clownfish sample ids from the Leyte database ####
 
 # connect to leyte fieldwork db
-leyte <- dbConnect(MySQL(), dbname = "Leyte", default.file = path.expand("~/myconfig.cnf"), port = 3306, create = F, host = NULL, user = NULL, password = NULL)
+leyte <- write_db("Leyte")
 
 # import fish table
 # select down to only sample_id numbers and remove any rows without a sample
@@ -20,7 +21,7 @@ fish <- dbReadTable(leyte, "clownfish") %>%
 fish <- distinct(fish)
 
 #connect to laboratory db
-lab <- dbConnect(MySQL(), "Laboratory", default.file = path.expand("~/myconfig.cnf"), port = 3306, create = F, host = NULL, user = NULL, password = NULL)
+lab <- write_db("Laboratory")
 
 # import extraction table and reduce to only the sample_id column
 extr <- dbReadTable(lab, "extraction") %>% 
