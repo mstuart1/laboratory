@@ -138,13 +138,12 @@ extr <- extr %>%
   mutate(method = "DNeasy96") %>% 
   mutate(final_vol = "200") %>% 
   mutate(quant = NA) %>% 
-  mutate(DNA_ug = NA) %>% 
   mutate(gel = NA) %>% 
   mutate(correction = NA) %>%
   mutate(corr_message = NA) %>% 
   mutate(corr_editor = NA) %>% 
   mutate(corr_date = NA) %>% 
-  select(extraction_id, sample_id, date, method, final_vol, quant, DNA_ug, gel, well, plate, notes, correction, corr_message, corr_editor, corr_date)
+  select(extraction_id, sample_id, date, method, final_vol, quant, gel, well, plate, notes, correction, corr_message, corr_editor, corr_date)
 
 # change plate name to match extraction range
 for (i in 1:nplates){
