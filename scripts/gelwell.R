@@ -1,7 +1,7 @@
 # gelwell
 #' based on plate locations and which pipet used, will identify the wells of a gel
-library(dplyr)
 library(stringr)
+source("scripts/lab_helpers.R")
 
 # 1. Define pipet ####
 pipet <- 12
@@ -9,10 +9,10 @@ pipet <- 12
 # pipet <- 1
 
 # 2. Define plate ####
-range <- "E3443-E3536"
+range <- "E3064-E3159"
 
 # 3. Connect to db
-lab <- src_mysql(dbname = "Laboratory", default.file = path.expand("~/myconfig.cnf"), port = 3306, create = F, host = NULL, user = NULL, password = NULL)
+lab <- read_db("Laboratory")
 
 # 4. retrieve extraction locations
 extr <- lab %>% 

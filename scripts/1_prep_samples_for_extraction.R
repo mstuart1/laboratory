@@ -1,5 +1,5 @@
 # This is a script for adding samples that are not in the laboratory database and have not been extracted yet
-library(RMySQL)
+# library(RMySQL)
 library(dplyr)
 source("scripts/lab_helpers.R")
 
@@ -12,8 +12,9 @@ leyte <- write_db("Leyte")
 # import fish table
 # select down to only sample_id numbers and remove any rows without a sample
 fish <- dbReadTable(leyte, "clownfish") %>% 
-  select(sample_id) %>% 
-  filter(!is.na(sample_id))
+  select(sample_id) %>%                      # select only the column sample_id
+  filter(!is.na(sample_id)) %>%              # remove any non-sample observations
+  distinct(sample_id)                        # remove any repeat sample_ids (this should not be needed)
 
 #### compare that list to samples that have already been extracted ####
 

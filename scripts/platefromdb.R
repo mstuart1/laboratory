@@ -1,16 +1,15 @@
 # a script to make platemaps from database location
-
+source("scripts/lab_helpers.R")
 
 # import samples from db
-library(dplyr)
-lab <- src_mysql(dbname = "Laboratory", default.file = path.expand("~/myconfig.cnf"), port = 3306, create = F, host = NULL, user = NULL, password = NULL)
+lab <- read_db("Laboratory")
 
 # choose a plate to create a plate map for
 plate <- lab %>% 
   # THIS IS WHERE YOU MUST ENTER THE SPECIFICS OF WHAT YOU WANT - extractions, range, etc?
   tbl("extraction") %>% 
   select(sample_id, extraction_id, well, plate) %>% 
-  filter(plate == "E4007-E4100") %>% 
+  filter(plate == "E3064-E3159") %>% 
   collect()
 
 # split the well out into row and column again
