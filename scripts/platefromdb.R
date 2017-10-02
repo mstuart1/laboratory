@@ -9,7 +9,7 @@ plate <- lab %>%
   # THIS IS WHERE YOU MUST ENTER THE SPECIFICS OF WHAT YOU WANT - extractions, range, etc?
   tbl("extraction") %>% 
   select(sample_id, extraction_id, well, plate) %>% 
-  filter(plate == "E3064-E3159") %>% 
+  filter(plate == "E4195-E4288") %>% 
   collect()
 
 # split the well out into row and column again
@@ -17,7 +17,7 @@ plate$row <- substr(plate$well, 1, 1)
 plate$col <- as.numeric(substr(plate$well, 2, 3))
 
 # select columns for plate ( ## YOU MUST CHOOSE HERE IF YOU WANT SAMPLE_ID OR SOME OTHER IDENTIFIER ##)
-plate <- plate %>% select(row, col, extraction_id) #keep row & col, choose identifier (here is sample_id)
+plate <- plate %>% select(row, col, sample_id) #keep row & col, choose identifier (here is sample_id)
 
 plate <- plate %>% arrange(row, col)
 plate <- as.data.frame(plate)

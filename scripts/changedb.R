@@ -1,7 +1,7 @@
 # edit notes in db
-library(RMySQL)
+source("scripts/lab_helpers.R")
 library(dplyr)
-lab <- dbConnect(MySQL(), "Laboratory", default.file = path.expand("~/myconfig.cnf"), port = 3306, create = F, host = NULL, user = NULL, password = NULL)
+lab <- write_db("Laboratory")
 
 # THIS DEPENDS ON WHICH TABLE YOU WANT TO WORK WITH 
 
@@ -12,17 +12,11 @@ extr <- lab %>% dbReadTable("extraction") %>% collect()
 
 # which(duplicated(extr$extraction_id) == T) # a test to see if any extraction ids are duplicated
 
-# change the values for a group of samples - this pulls out only the few that fit the filter
-fails <- c("E3358", "E3351", "E3359", "E3366", "E3421", "E3422", "E3425" )
-
 change <- extr %>% 
-  filter(plate == "E3349-E3442") %>% 
-  # mutate(notes = "fins have been loaded into plates and lysed")
+  filter(plate == "E4007-E4100" | plate == "E3819-E3912" | plate == "E3913-E4006") %>% 
+  mutate(notes = "fins have been loaded into plates and lysed")
   # mutate(date = "2017-08-29", notes = "")
-  # mutate(gel = "2017-09-08")
-  filter(extraction_id %in% fails) %>%
-  mutate(notes = "no band on gel") # made sure to check that no pre-existing notes present
-
+  
 
 # remove those few from the whole group (the extraction ids are for prechange rows)
 extr <- anti_join(extr, change, by = "extraction_id")
