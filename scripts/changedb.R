@@ -13,9 +13,12 @@ extr <- lab %>% dbReadTable("extraction") %>% collect()
 # which(duplicated(extr$extraction_id) == T) # a test to see if any extraction ids are duplicated
 
 change <- extr %>% 
-  filter(plate == "E4007-E4100" | plate == "E3819-E3912" | plate == "E3913-E4006") %>% 
-  mutate(notes = "fins have been loaded into plates and lysed")
-  # mutate(date = "2017-08-29", notes = "")
+  filter(plate == "E3725-E3818" | plate == "E3819-E3912") %>%
+  # filter(extraction_id >= "E4289") %>% 
+  # mutate(notes = "remaining fin clips don't fit into a set of 2 96 well plates, plan alternative") %>% 
+  # mutate(plate = NA)
+  mutate(date = "2017-10-03", notes = NA)
+  # mutate(notes = NA)
   
 
 # remove those few from the whole group (the extraction ids are for prechange rows)
