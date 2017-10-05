@@ -31,6 +31,60 @@ write_db <- function(x){
 }
 
 
+# plate_from_db ####
+#' recreate a plate map from info in the db
+#' @export
+#' @name plate_from_db
+#' @author Michelle Stuart
+#' @param x = the table of samples to turn into a plate
+#' @param y = the sample identifier you want to use
+#' @examples 
+#' plate <- plate_from_db(todo, extraction_id)
+
+plate_from_db <- function(x, y){
+  # split the well out into row and column 
+  x$row <- substr(x$well, 1, 1)
+  x$col <- as.numeric(substr(x$well, 2, 3))
+  
+  # select columns for plate 
+  if (y == "extraction_id"){
+    x <- x %>% 
+      select(row, col, extraction_id) %>% #keep row & col, identifier
+      arrange(row, col)
+  }
+  if (y == "sample_id"){
+    x <- x %>% 
+      select(row, col, sample_id) %>% #keep row & col, identifier
+      arrange(row, col)
+  }
+  if (y == "digest_id"){
+    x <- x %>% 
+      select(row, col, digest_id) %>% #keep row & col, identifier
+      arrange(row, col)
+  }
+  if (y == "ligation_id"){
+    x <- x %>% 
+      select(row, col, ligation_id) %>% #keep row & col, identifier
+      arrange(row, col)
+  }
+
+  x <- as.data.frame(x)
+  
+  # make map
+  platemap <<- as.matrix(reshape2::acast(x,x[,1] ~ x[,2]))
+  return(x)
+}
+
+
+
+
+
+
+
+
+
+
+
 # make_plate ####
 #' access db with intent to change it
 #' @export
