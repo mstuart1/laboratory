@@ -77,16 +77,30 @@ for (i in 1:nrow(plates)){ # can't have more than 11 columns of samples on a fir
 # make a platemap for the firsts
 
   # isolate the first column
-  temp <- firsts %>% 
-    filter(grepl("1", well) & !grepl("11", well) & !grepl("10", well) & !grepl("12", well))
-  firsts <- anti_join(firsts, temp) # remove the column from the firsts table
+  # temp <- firsts %>% # there is nothing in the 1 column currently
+  #   filter(grepl("1", well) & !grepl("11", well) & !grepl("10", well) & !grepl("12", well))
+  # firsts <- anti_join(firsts, temp) # remove the column from the firsts table 
+
+# when temp is empty from the code above:
+id_1 <- rep("STD", 8)
+id_2 <- rep("STD", 8)
+row <- rep(LETTERS[1:8])
+col <- rep("1", 8)
+plate <- rep("firsts", 8)
+temp <- data.frame(id_1, id_2, row, col, plate)
+temp$well <- paste(row, col, sep = "")
+temp$row <- NULL
+temp$col <- NULL
+temp <- select(temp, id_1, id_2, well, plate)
+names(temp) <- names(firsts)
+
 
   # replace with standards
   stds <- temp %>% 
     mutate(extraction_id = "STD", 
     digest_id = "STD",
     sample_id = "STD") %>% 
-    mutate(plate = NA) %>% 
+    mutate(plate = "firsts") %>% 
     select(-5) %>%  # remove the last column, which doesn't match todo
     distinct()
   
@@ -94,8 +108,8 @@ for (i in 1:nrow(plates)){ # can't have more than 11 columns of samples on a fir
   firsts <- rbind(firsts, stds)
 
   # make the plate map
-  plate <- plate_from_db(firsts, "extraction_id") # save this for locating samples when reading in plate data
-  write.csv(plate, file = paste("./maps/", Sys.Date(), "_firsts_list.csv", sep = ""))
+  plate <- plate_from_db(firsts, "extraction_id") 
+  write.csv(plate, file = paste("./maps/", Sys.Date(), "_firsts_list.csv", sep = "")) # save this for locating samples when reading in plate data
   
   write.csv(platemap, file = paste("./maps/",Sys.Date(), "_firsts.csv", sep = ""))
 
