@@ -11,7 +11,9 @@ x <- "extraction"
 # which plates need to be read?
 todo <- lab %>% 
   tbl(x) %>% 
-  filter(is.na(quant)) %>% 
+  # filter(is.na(quant)) %>% # if you want any unquantified plates
+  filter(plate == "E3161-E3254" | plate == "E3255-E3348" | plate == "E3349-E3442" | plate == "E3443-E3536") %>%  # if you want to specify plates
+  filter(!is.na(plate)) %>% # eliminate any plates that haven't been extracted yet
   collect() %>% 
   arrange(plate, well) %>% 
   select(1:2, well, plate) # the first 2 columns of any table are the id columns
@@ -43,7 +45,7 @@ plates <- todo %>%
 
 # create plates from this db info
 
-for (i in 1:11){ # can't have more than 11 columns of samples on a firsts plate
+for (i in 1:nrow(plates)){ # can't have more than 11 columns of samples on a firsts plate
   # filter down to one plate
   x <- plates$plate[i]
   current <- todo %>% 
@@ -92,7 +94,9 @@ for (i in 1:11){ # can't have more than 11 columns of samples on a firsts plate
   firsts <- rbind(firsts, stds)
 
   # make the plate map
-  test <- plate_from_db(firsts, "extraction_id")
+  plate <- plate_from_db(firsts, "extraction_id") # save this for locating samples when reading in plate data
+  write.csv(plate, file = paste("./maps/", Sys.Date(), "_firsts_list.csv", sep = ""))
+  
   write.csv(platemap, file = paste("./maps/",Sys.Date(), "_firsts.csv", sep = ""))
 
 
