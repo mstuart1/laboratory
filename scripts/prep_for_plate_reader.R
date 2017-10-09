@@ -11,13 +11,18 @@ x <- "extraction"
 # which plates need to be read?
 todo <- lab %>% 
   tbl(x) %>% 
-  # filter(is.na(quant)) %>% # if you want any unquantified plates
-  filter(plate == "E3161-E3254" | plate == "E3255-E3348" | plate == "E3349-E3442" | plate == "E3443-E3536") %>%  # if you want to specify plates
+  filter(is.na(quant)) %>% # if you want any unquantified plates
+  # filter(plate == "E3161-E3254" | plate == "E3255-E3348" | plate == "E3349-E3442" | plate == "E3443-E3536") %>%  # if you want to specify plates
   filter(!is.na(plate)) %>% # eliminate any plates that haven't been extracted yet
   collect() %>% 
   arrange(plate, well) %>% 
   select(1:2, well, plate) # the first 2 columns of any table are the id columns
-  
+
+# move the twelfth plate to it's own table - its firsts will not fit with the others
+twelve <- todo %>% 
+  filter(plate == "E4195-E4288")
+
+todo <- anti_join(todo, twelve, by = "extraction_id")
 
 # all of the first columns are going to be replaced with standards, grab samples to be moved
 firsts <- todo %>% 
@@ -112,5 +117,58 @@ names(temp) <- names(firsts)
   write.csv(plate, file = paste("./maps/", Sys.Date(), "_firsts_list.csv", sep = "")) # save this for locating samples when reading in plate data
   
   write.csv(platemap, file = paste("./maps/",Sys.Date(), "_firsts.csv", sep = ""))
-
+  # 
+  # # create firsts for the twelfth plate
+  # 
+  # firsts <- twelve %>% 
+  #   filter(grepl("1", well) & !grepl("11", well) & !grepl("10", well) & !grepl("12", well))
+  # 
+  # 
+  # temp <- firsts %>% 
+  #   mutate(
+  #     col = as.numeric(substr(well, 2, 2)) + 1, 
+  #     row = substr(well, 1, 1))
+  # 
+  # # remove the changed rows from firsts
+  # firsts <- anti_join(firsts, temp, by = c("well", "plate"))
+  # 
+  # # change the rows
+  # temp <- temp %>% 
+  #   mutate(well = paste(row, col, sep = "")) %>% 
+  #   select(-row, -col)
+  # 
+  # # rejoin the rows
+  # firsts <- rbind(firsts, temp)
+  # 
+  # # when temp is empty from the code above:
+  # id_1 <- rep("STD", 8)
+  # id_2 <- rep("STD", 8)
+  # row <- rep(LETTERS[1:8])
+  # col <- rep("1", 8)
+  # plate <- rep("firsts", 8)
+  # temp <- data.frame(id_1, id_2, row, col, plate)
+  # temp$well <- paste(row, col, sep = "")
+  # temp$row <- NULL
+  # temp$col <- NULL
+  # temp <- select(temp, id_1, id_2, well, plate)
+  # names(temp) <- names(firsts)
+  # 
+  # 
+  # # replace with standards
+  # stds <- temp %>% 
+  #   mutate(extraction_id = "STD", 
+  #     digest_id = "STD",
+  #     sample_id = "STD") %>% 
+  #   mutate(plate = "firsts") %>% 
+  #   select(-5) %>%  # remove the last column, which doesn't match todo
+  #   distinct()
+  # 
+  # # join back to firsts
+  # firsts <- rbind(firsts, stds)
+  # 
+  # # make the plate map
+  # plate <- plate_from_db(firsts, "extraction_id") 
+  # write.csv(plate, file = paste("./maps/", Sys.Date(), "_firsts_list.csv", sep = "")) # save this for locating samples when reading in plate data
+  # 
+  
 
