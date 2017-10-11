@@ -136,7 +136,81 @@ make_plate_with_negs <- function(list_of_ids, id_type){
   plate <- arrange(plate, plate, Col, Row)
   
   return(plate)
+}
 
+
+# make_plate ####
+#' turn a table into plates with negative controls
+#' @export
+#' @name make_plate
+#' @author Michelle Stuart
+#' @param x = list of ids
+#' @param y = id_type
+#' @examples 
+#' plate <- make_plate_with_negs(todo)
+
+
+
+# remove_rows ####
+#' remove rows that won't fit on a plate or data set size, id column must be first column
+#' @export
+#' @name remove_rows
+#' @author Michelle Stuart
+#' @param x = table_name
+#' @param y = how_many_wells
+#' @
+#' @examples 
+#' ligate <- remove_rows(ligate, 96)
+
+remove_rows <- function(table_name, how_many_wells){
+  x <- nrow(table_name) %% how_many_wells # get the remainder after dividing by 48
+  table_name <- table_name %>% 
+    select(1) %>% 
+    arrange() %>% 
+    slice(1:(nrow(table_name) - x))
   
+}
+
+make_plate <- function(list_of_ids, id_type){
+  # make a dataframe of the list_of_ids
+  list_of_ids <- as.data.frame(list_of_ids)
+  
+  # how many rows are in the table (how many samples)?
+  y <- nrow(list_of_ids)
+  
+  # how many plates would these make
+  (nplates <- floor(y/96)) # extra parenthesis are to print
+  
+  # remove those rows that don't fit into plates
+  list_of_ids <- remove_rows(list_of_ids, 96)
+  
+  # define wells
+  well <- 1:(96*nplates)
+  
+  # set up the plate
+  plate <- cbind(well, list_of_ids)
+  
+  for 
+  
+  # add rows and columns
+  plate <- plate %>% 
+    mutuate(
+      row = rep(LETTERS[1:8], 12),
+      col = unlist(lapply(1:12, rep, 8))
+      plate = paste("plate", )
+    )
+  
+  temp$Row <- rep(LETTERS[1:8], 12)
+  temp$Col <- unlist(lapply(1:12, rep, 8))
+  temp$plate <- paste("plate", i, sep = "")
+  plate <- rbind(plate, temp)
+  # put the samples in order of id (with negative controls inserted)
+  plate <- arrange(plate, plate, Col, Row)
+  
+  return(plate)
+}
 
 }
+
+
+
