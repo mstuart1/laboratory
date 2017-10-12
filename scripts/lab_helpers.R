@@ -1,4 +1,5 @@
 # lab helpers - helper functions for lab work
+library(dplyr)
 
 # read_db ####
 #' views all of the fish recaptured at a given site
@@ -10,7 +11,6 @@
 #' db <- read_Db("Leyte")
 
 read_db <- function(db_name){
-  library(dplyr)
   db <- src_mysql(dbname = db_name, default.file = path.expand("~/myconfig.cnf"), port = 3306, create = F, host = NULL, user = NULL, password = NULL)
   return(db)
 }
@@ -171,13 +171,24 @@ remove_rows <- function(table_name, how_many_wells){
   
 }
 
-make_plate <- function(list_of_ids, id_type){
+# make_plate ####
+#' make a plate from a list of sample_ids, extraction_ids, etc.
+#' @export
+#' @name make_plate
+#' @author Michelle Stuart
+#' @param x = list of ids
+#' @examples 
+#' test <- make_plate(lig_ids)
+
+make_plate <- function(list_of_ids){
   # make a dataframe of the list_of_ids
   list_of_ids <- as.data.frame(list_of_ids)
   
   # how many rows are in the table (how many samples)?
   y <- nrow(list_of_ids)
   
+  if (y >= 96){
+    
   # how many plates would these make
   (nplates <- floor(y/96)) # extra parenthesis are to print
   
@@ -188,29 +199,51 @@ make_plate <- function(list_of_ids, id_type){
   well <- 1:(96*nplates)
   
   # set up the plate
-  plate <- cbind(well, list_of_ids)
+  plate <- data_frame()
+  for (i in 1:nplates){
+    a <- 96*i-95 # position 1
+    b <- 96*i     # position 96
+    temp <- cbind(well[a:b], as.data.frame(list_of_ids[a:b, ]))
+    temp$row <- rep(LETTERS[1:8], 12)
+    temp$col = unlist(lapply(1:12, rep, 8))
+    temp$plate = paste("plate", i, sep = "")
+    plate <- rbind(plate, temp)
+  }
   
-  for 
+  # put plate in order
+  plate <- arrange(plate, plate, col, row)
   
-  # add rows and columns
-  plate <- plate %>% 
-    mutuate(
-      row = rep(LETTERS[1:8], 12),
-      col = unlist(lapply(1:12, rep, 8))
-      plate = paste("plate", )
-    )
-  
-  temp$Row <- rep(LETTERS[1:8], 12)
-  temp$Col <- unlist(lapply(1:12, rep, 8))
-  temp$plate <- paste("plate", i, sep = "")
-  plate <- rbind(plate, temp)
-  # put the samples in order of id (with negative controls inserted)
-  plate <- arrange(plate, plate, Col, Row)
-  
+  }else{
+    plate <- data.frame( Row = rep(LETTERS[1:8], 12), Col = unlist(lapply(1:12, rep, 8)))
+    plate <- plate[1:y,]
+    plate <- cbind(plate, list_of_ids)
+    plate$plate <- "shortplate1"
+    }
+    
   return(plate)
 }
 
+# change_rows ####
+#' once rows have been changed remove them from table and add them back in
+#' @export
+#' @name change_rows
+#' @author Michelle Stuart
+#' @param x = whole table
+#' @param y = the changed rows
+#' @param z = identifying co
+#' @examples 
+#' deer <- change_rows(deer, change)
+
+change_rows <- function(table, change, identifier){
+  table <- anti_join(ligs, change, by = identifier)
+  table <- rbind(table, change)
+  return <- table
+  
 }
+
+  
+
+  
 
 
 

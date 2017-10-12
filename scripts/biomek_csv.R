@@ -4,111 +4,75 @@ source("scripts/lab_helpers.R")
 # connect to db
 lab <- read_db("Laboratory")
 
-# get extract numbers for all of these - why?  That doesn't make sense
+# the biomek table has 8 locations available
+mek_loc <- c("P5", "P6", "P7", "P8", "P9", "P10", "P11", "P12")
 
-# get ligations for a specific date
+# find the planned ligations by date or notes or plate
+# get digest quants numbers for ligations
 ligs <- lab %>% 
   tbl("ligation") %>% 
   filter(date == "2016-04-28") %>% 
-  select(ligation_id, digest_id) %>% 
+  select(ligation_id, digest_id, DNA, vol_in, water, well, plate) %>% 
   collect()
 
-# make a platemap_list of the destination ligations
-plate <- data.frame( Row = rep(LETTERS[1:8], 12), Col = unlist(lapply(1:12, rep, 8)))
+digs <- lab %>% 
+  tbl("digest") %>% 
+  filter(digest_id %in% ligs$digest_id) %>% 
+  select(digest_id, quant, well, plate) %>% 
+  collect() %>% 
+  rename(dig_well = well, dig_plate = plate)
 
-dest <- cbind(plate, allmeta[1:96, c("ligation_ID", "digest_ID", "quant")])
-dest  <- dest %>% mutate(dnavol = 200/quant)
-dest <- dest %>% mutate(watervol = 22.2-dnavol)
+ligs <- left_join(ligs, digs[, c("digest_id", "well", "plate")], by = "digest_id") %>% 
+  arrange(ligation_id)
 
-dest$welldest <- paste(dest$Row, dest$Col, sep = "")
+# how many ligation plates are there?
+(lig_plates <- ligs %>% 
+    distinct(plate))
+x <- nrow(lig_plates)
+  
 
-# clean up 
-dest$Row <- NULL
-dest$Col <- NULL
-dest$quant <- NULL
-dest$destloc <- "P11"
-dest <- dest[ , c(2,3,4,1,6,5)]
+# dest$destloc <- "P11" # are you sure?
+# dest <- dest[ , c(2,3,4,1,6,5)] # rearrange columns - why?
 
 # add source locations
 
-# digests from the date we want
-digest <- data.frame(labor %>% tbl("digest") %>% filter(date == '2016-04-04'), stringsAsFactors = F)
+# digests from the ligations we want
+source <- lab %>% 
+  tbl("digest") %>% 
+  filter(digest_id %in% ligs$digest_id) %>% 
+  select(digest_id, well, plate) %>% 
+  collect()
 
-# the specific digest plate
-source1 <- cbind(plate, digest[97:192,1])
-names(source1) <- c("Row", "Col", "ID")
-first <- source1$ID[1]
-last <- source1$ID[nrow(source1)]
-write.csv(source1, file = paste(first, "-", last, "_list.csv", sep = ""))
-source1$ID <- as.character(source1$ID)
-platemap <- as.matrix(reshape2::acast(source1, source1[,1] ~ source1[,2]))
-write.csv(platemap, file = paste(first, "-",last, "_map.csv"))
+# how many digest plates are there?
+(dig_plates <- source %>% 
+    distinct(plate))
+y = nrow(dig_plates)
 
-final <- merge(dest, source1, by.x = "digest_ID", by.y = "ID", all.x = T)
-final$wellsource <- paste(final$Row, final$Col, sep = "")
-
-# clean up
-final$Row <- NULL
-final$Col <- NULL
-
-# split out digests by plate
-
-source1 <- final[which(final$wellsource != "NANA"), ]
-
-remaining <- final[which(final$wellsource == "NANA"), ]
-
-# next digests from the date we want
-digest <- data.frame(labor %>% tbl("digest") %>% filter(date == '2016-04-25'), stringsAsFactors = F)
-
-source2 <- cbind(plate, digest[1:96,1])
-names(source2) <- c("Row", "Col", "ID")
-first <- source2$ID[1]
-last <- source2$ID[nrow(source2)]
-write.csv(source2, file = paste(first, "-", last, "_list.csv", sep = ""))
-source2$ID <- as.character(source2$ID)
-platemap <- as.matrix(reshape2::acast(source2,source2[,1] ~ source2[,2]))
-write.csv(platemap, file = paste(first, "-",last, "_map.csv"))
-
-final <- merge(remaining, source2, by.x = "digest_ID", by.y = "ID", all.x = T)
-final$wellsource <- paste(final$Row, final$Col, sep = "")
+ligs$dest <- "NA"
+if (x + y <= 8){ # if we need 8 or fewer plates
+  for (i in 1:nrow(lig_plates)){
+      change <- ligs %>% 
+        filter(plate == lig_plates$plate[i]) %>% 
+        mutate(dest = mek_loc[length(mek_loc)])
+      mek_loc <- mek_loc[1:length(mek_loc)-1]
+      ligs <- change_rows(ligs, change, "ligation_id")
+  }
+  for (i in 1:nrow(dig_plates)){
+    change <- digs %>% 
+      filter(plate == dig_plates$plate[i]) %>% 
+      mutate(source = mek_loc[length(mek_loc)])
+    mek_loc <- mek_loc[1:length(mek_loc)-1]
+    digs <- change_rows(digs, change, "digest_id")
+  }
+  }
+  
 
 
-# clean up
-final$Row <- NULL
-final$Col <- NULL
-
-# split out digests by plate
-
-source2 <- final[which(final$wellsource != "NANA"), ]
-
-remaining <- final[which(final$wellsource == "NANA"), ]
-
-# next digests from the date we want
-digest <- data.frame(labor %>% tbl("digest") %>% filter(date == '2016-04-25'), stringsAsFactors = F)
-
-source3 <- cbind(plate, digest[97:192,1])
-names(source3) <- c("Row", "Col", "ID")
-source3 <- source3[!is.na(source3$ID), ]
-first <- source3$ID[1]
-last <- source3$ID[nrow(source3)]
-write.csv(source3, file = paste(first, "-", last, "_list.csv", sep = ""))
-source3$ID <- as.character(source3$ID)
-platemap <- as.matrix(reshape2::acast(source3,source3[,1] ~ source3[,2]))
-write.csv(platemap, file = paste(first, "-",last, "_map.csv"))
-
-final <- merge(remaining, source3, by.x = "digest_ID", by.y = "ID", all.x = T)
-final$wellsource <- paste(final$Row, final$Col, sep = "")
 
 
-# clean up
-final$Row <- NULL
-final$Col <- NULL
 
-# split out digests by plate
 
-source3 <- final[which(final$wellsource != "NANA"), ]
 
-remaining <- final[which(final$wellsource == "NANA"), ]
 
 # add source positions to each of the source plates
 source1$sourceloc <- "P9"
