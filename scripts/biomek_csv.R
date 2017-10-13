@@ -83,7 +83,7 @@ biomek <- left_join(biomek, temp, by = "digest_id") %>%
   select(ligation_id, digest_id, lig_well, dig_well, lig_loc, dig_loc, dig_vol) 
 rm(temp)
 
-# write.csv(biomek, file = paste(Sys.Date(), "_biomek.csv", sep = ""))
+# write.csv(biomek, file = paste("output/",Sys.Date(), "_biomek.csv", sep = ""))
 
 # create a csv for water ####
 # pull the needed columns from ligs
@@ -99,10 +99,10 @@ water_file <- ligs %>%
     water_well = "D6"
     )
 
-# write.csv(water_file, file = paste(Sys.Date(), "_biomek_water.csv", sep = ""))
+# write.csv(water_file, file = paste("output/", Sys.Date(), "_biomek_water.csv", sep = ""))
 
 # just in case you can have one file for both water and samples
 
 combo <- left_join(biomek, water_file, by = c("ligation_id", "lig_well", "lig_loc"))
 
-# write.csv(combo, file = paste(Sys.Date(), "_biomek_combo.csv", sep = ""))
+# write.csv(combo, file = paste("output/", Sys.Date(), "_biomek_combo.csv", sep = ""))
