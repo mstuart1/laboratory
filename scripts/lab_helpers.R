@@ -235,11 +235,37 @@ make_plate <- function(list_of_ids){
 #' deer <- change_rows(deer, change)
 
 change_rows <- function(table, change, identifier){
-  table <- anti_join(ligs, change, by = identifier)
+  table <- anti_join(table, change, by = identifier)
   table <- rbind(table, change)
   return <- table
-  
 }
+
+# assign_mek_loc ####
+#' assign a location on the robot table for a destination or source plate
+#' @export
+#' @name assign_mek_loc
+#' @author Michelle Stuart
+#' @param y = table that contains the data
+#' @param z = dest_or_source
+#' @param a = identifier
+#' @examples 
+#' source <- assign_mek_loc(dig_plates, source, "source", "digest_id")
+
+assign_mek_loc <- function(table, dest_or_source, identifier){
+    if (dest_or_source == "dest"){
+      change <- table %>% 
+        mutate(dest = mek_loc[length(mek_loc)])
+      mek_loc <<- mek_loc[1:length(mek_loc)-1]
+      table <- change_rows(table, change, identifier)
+    }else{
+      change <- table %>% 
+        mutate(source = mek_loc[length(mek_loc)])
+      mek_loc <<- mek_loc[1:length(mek_loc)-1]
+      table <- change_rows(table, change, identifier)
+    }
+  return(table)
+}
+
 
   
 
