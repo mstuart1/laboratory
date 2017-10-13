@@ -245,25 +245,33 @@ change_rows <- function(table, change, identifier){
 #' @export
 #' @name assign_mek_loc
 #' @author Michelle Stuart
+#' @param x = plate_names - a table of plates 
 #' @param y = table that contains the data
 #' @param z = dest_or_source
 #' @param a = identifier
 #' @examples 
 #' source <- assign_mek_loc(dig_plates, source, "source", "digest_id")
 
-assign_mek_loc <- function(table, dest_or_source, identifier){
+assign_mek_loc <- function(plate_names, table, dest_or_source, identifier){
+  for (i in 1:nrow(plate_names)){
     if (dest_or_source == "dest"){
       change <- table %>% 
+        filter(plate == plate_names$plate[i]) %>% 
         mutate(dest = mek_loc[length(mek_loc)])
       mek_loc <<- mek_loc[1:length(mek_loc)-1]
       table <- change_rows(table, change, identifier)
     }else{
       change <- table %>% 
+        filter(plate == plate_names$plate[i]) %>% 
         mutate(source = mek_loc[length(mek_loc)])
       mek_loc <<- mek_loc[1:length(mek_loc)-1]
       table <- change_rows(table, change, identifier)
     }
+    
+  }
   return(table)
+  
+  
 }
 
 
