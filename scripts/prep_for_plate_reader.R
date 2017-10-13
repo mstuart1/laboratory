@@ -57,7 +57,7 @@ for (i in 1:nrow(plates)){ # can't have more than 11 columns of samples on a fir
     filter(plate == x)
   # prep a map
   plate <- plate_from_db(current, "extraction_id")
-  write.csv(platemap, file = paste("./maps/",Sys.Date(), x, ".csv", sep = ""))
+  write.csv(platemap, file = paste("./output/",Sys.Date(), x, ".csv", sep = ""))
   
   # update the location for the firsts
   temp <- firsts %>% 
@@ -114,9 +114,9 @@ names(temp) <- names(firsts)
 
   # make the plate map
   plate <- plate_from_db(firsts, "extraction_id") 
-  write.csv(plate, file = paste("./maps/", Sys.Date(), "_firsts_list.csv", sep = "")) # save this for locating samples when reading in plate data
+  write.csv(plate, file = paste("./output/", Sys.Date(), "_firsts_list.csv", sep = "")) # save this for locating samples when reading in plate data
   
-  write.csv(platemap, file = paste("./maps/",Sys.Date(), "_firsts.csv", sep = ""))
+  write.csv(platemap, file = paste("./output/",Sys.Date(), "_firsts.csv", sep = ""))
   # 
   # # create firsts for the twelfth plate
   # 
@@ -168,7 +168,7 @@ names(temp) <- names(firsts)
   # 
   # # make the plate map
   # plate <- plate_from_db(firsts, "extraction_id") 
-  # write.csv(plate, file = paste("./maps/", Sys.Date(), "_firsts_list.csv", sep = "")) # save this for locating samples when reading in plate data
+  # write.csv(plate, file = paste("./output/", Sys.Date(), "_firsts_list.csv", sep = "")) # save this for locating samples when reading in plate data
   # 
   
 

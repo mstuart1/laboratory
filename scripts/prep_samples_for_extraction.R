@@ -103,7 +103,7 @@ for (i in 1:nrow(platelist)){
     select(Row, Col, sample_id)
   
   platemap <- as.matrix(reshape2::acast(plate, plate[,1] ~ plate[,2]), value.var = plate[,3])
-  write.csv(platemap, file = paste("./maps/",Sys.Date(), "extract_map", i, ".csv", sep = ""))
+  write.csv(platemap, file = paste("./output/",Sys.Date(), "extract_map", i, ".csv", sep = ""))
 }
 
 ### ONLY DO THIS ONCE ### generate extract numbers for database ####

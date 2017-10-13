@@ -188,7 +188,7 @@ for (i in 1:nrow(platelist)){
     select(Row, Col, extraction_id)
   
   platemap <- as.matrix(reshape2::acast(plate, plate[,1] ~ plate[,2]), value.var = plate[,3])
-  # write.csv(platemap, file = paste("./maps/",Sys.Date(), "digest_map", i, ".csv", sep = ""))
+  # write.csv(platemap, file = paste("./output/",Sys.Date(), "digest_map", i, ".csv", sep = ""))
 }
 
 ### ONLY DO THIS ONCE ### generate digest numbers for database ####

@@ -88,7 +88,7 @@ dat2 <- read.table(text = strs,  skip = linestoskip, sep = "\t", fill = T, heade
 dat2 <- dat2[1:(which(dat2$Sample == "Group Summaries")-1), ]
 
 # open the list of first column samples
-firsts <- read.csv("maps/2017-10-09_firsts_list.csv")
+firsts <- read.csv("output/2017-10-09_firsts_list.csv")
 firsts <- firsts %>% 
   mutate(Wells = paste(row, col, sep = ""))
 
