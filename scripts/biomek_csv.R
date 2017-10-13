@@ -7,94 +7,122 @@ lab <- read_db("Laboratory")
 # the biomek table has 8 locations available
 mek_loc <- c("P5", "P6", "P7", "P8", "P9", "P10", "P11", "P12")
 
-# find the planned ligations by date or notes or plate
+# find the planned ligations by plate
 # get digest quants numbers for ligations
 ligs <- lab %>% 
   tbl("ligation") %>% 
-  filter(date == "2016-04-28") %>% 
+  filter(plate == "L2776-L2871") %>% 
   select(ligation_id, digest_id, DNA, vol_in, water, well, plate) %>% 
-  collect()
-
-digs <- lab %>% 
-  tbl("digest") %>% 
-  filter(digest_id %in% ligs$digest_id) %>% 
-  select(digest_id, quant, well, plate) %>% 
   collect() %>% 
-  rename(dig_well = well, dig_plate = plate)
-
-ligs <- left_join(ligs, digs[, c("digest_id", "well", "plate")], by = "digest_id") %>% 
   arrange(ligation_id)
 
-# how many ligation plates are there?
-(lig_plates <- ligs %>% 
-    distinct(plate))
-x <- nrow(lig_plates)
+# digs <- lab %>%  # I don't think this needs to be done because we find the source plates later
+#   tbl("digest") %>% 
+#   filter(digest_id %in% ligs$digest_id) %>% 
+#   select(digest_id, quant, well, plate) %>% 
+#   collect() %>% 
+#   rename(dig_well = well, dig_plate = plate)
+
+# ligs <- left_join(ligs, digs[, c("digest_id", "dig_well", "dig_plate")], by = "digest_id") %>% 
+#   arrange(ligation_id)
+
+# # how many ligation plates are there? This is also the number of tip plates needed, so double it.
+# (lig_plates <- ligs %>% 
+#     distinct(plate))
+# x <- nrow(lig_plates)
+
+# just plan one lig plate at a time but still need plate name for code to work
+lig_plates <- ligs %>% 
+  distinct(plate)
+
+ligs$dest <- "NA"
+tips <- "NA"
+water <- "NA"
   
+#assign lig plate location in the last open position on the table
+ligs <- assign_mek_loc(lig_plates, ligs, "dest", "ligation_id")
+  
+#assign tips in the last open position on the table
+tips <- mek_loc[length(mek_loc)]
+mek_loc <- mek_loc[1:length(mek_loc)-1]
+ 
+#assign water in the last open position on the table
+water <- mek_loc[length(mek_loc)]
+mek_loc <- mek_loc[1:length(mek_loc)-1] 
 
-# dest$destloc <- "P11" # are you sure?
-# dest <- dest[ , c(2,3,4,1,6,5)] # rearrange columns - why?
-
-# add source locations
-
-# digests from the ligations we want
-source <- lab %>% 
+# get source locations from database
+source <- lab %>%
   tbl("digest") %>% 
   filter(digest_id %in% ligs$digest_id) %>% 
   select(digest_id, well, plate) %>% 
   collect()
 
-# how many digest plates are there?
-(dig_plates <- source %>% 
-    distinct(plate))
-y = nrow(dig_plates)
 
-ligs$dest <- "NA"
-if (x + y <= 8){ # if we need 8 or fewer plates
-  for (i in 1:nrow(lig_plates)){
-      change <- ligs %>% 
-        filter(plate == lig_plates$plate[i]) %>% 
-        mutate(dest = mek_loc[length(mek_loc)])
-      mek_loc <- mek_loc[1:length(mek_loc)-1]
-      ligs <- change_rows(ligs, change, "ligation_id")
-  }
-  for (i in 1:nrow(dig_plates)){
-    change <- digs %>% 
-      filter(plate == dig_plates$plate[i]) %>% 
-      mutate(source = mek_loc[length(mek_loc)])
-    mek_loc <- mek_loc[1:length(mek_loc)-1]
-    digs <- change_rows(digs, change, "digest_id")
-  }
-  }
+source$source <- "NA"
+dig_plates <- source %>% # there could be more than one source plate
+  distinct(plate)
   
+#assign sources in the last open position on the table
+if (nrow(dig_plates) <= length(mek_loc)){
+  source <- assign_mek_loc(dig_plates, source, "source", "digest_id") 
+}else{ 
+  stop()
+}
 
+# now there is a ligs table with a volume of sample to move to a destination 
+# location and a volume of water to move to a destination location. There is
+# also a source table with the location of the sample and water and tips objects
+# with the location of water and tips. from here, need to make a csv that
+# contains destination well, source well, destination location, source location
+# and source volume for the samples and the water.
 
+# pull the necessary columns from the ligs table and rename columns
+biomek <- ligs %>% 
+  select(well, dest, vol_in, ligation_id, digest_id) %>% 
+  rename(
+    dest_well = well,
+    dest_loc = dest,
+    source_vol = vol_in
+  )
 
+# pull the necessary columns from the source table and rename columns
+temp <- source %>% 
+  select(well, source, digest_id) %>% 
+  rename(
+    source_well = well,
+    source_loc = source
+  )
 
+# join the two sets of columns and rearrange order of columns
+biomek <- left_join(biomek, temp, by = "digest_id") %>% 
+  select(ligation_id, digest_id, dest_well, source_well, dest_loc, source_loc, source_vol) 
+rm(temp)
 
+# write.csv(biomek, file = paste(Sys.Date(), "_biomek.csv", sep = ""))
 
+# create a csv for water ####
+# pull the needed columns from ligs
+water_file <- ligs %>% 
+  select(ligation_id, water, well, dest) %>% 
+  rename(
+    source_vol = water,
+    dest_well = well,
+    dest_loc = dest
+  )%>% 
+  mutate(
+    source_loc = water,
+    water_well = "D6"
+    )
 
+# write.csv(water_file, file = paste(Sys.Date(), "_biomek_water.csv", sep = ""))
 
-# add source positions to each of the source plates
-source1$sourceloc <- "P9"
-source2$sourceloc <- "P10"
-source3$sourceloc <- "P5"
+# just in case you can have one file for both water and samples
+water_file <- water_file %>% 
+  rename(
+    water_vol = source_vol,
+    water_loc = source_loc
+  )
 
-# merge the source files together
-ultimate <- rbind(source1, source2, source3)
-ultimate$dnavol <- round(ultimate$dnavol, 2)
-ultimate$watervol <- round(ultimate$watervol, 2)
+combo <- left_join(biomek, water_file, by = c("ligation_id", "dest_well", "dest_loc"))
 
-
-# pull out the water information
-water <- ultimate
-water$wellsource <- "A1"
-water$sourceloc <- "P12"
-
-write.csv(ultimate, file = paste(Sys.Date(), "biomek.csv", sep = ""))
-
-write.csv(water, file = paste(Sys.Date(), "water.csv", sep = ""))
-
-penultimate <- rbind(ultimate, water)
-penultimate <- penultimate[order(penultimate$digest_ID), ]
-
-write.csv(penultimate, file = paste(Sys.Date(), "combo.csv", sep = ""))
+# write.csv(combo, file = paste(Sys.Date(), "_biomek_combo.csv", sep = ""))
