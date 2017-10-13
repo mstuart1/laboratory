@@ -16,21 +16,6 @@ ligs <- lab %>%
   collect() %>% 
   arrange(ligation_id)
 
-# digs <- lab %>%  # I don't think this needs to be done because we find the source plates later
-#   tbl("digest") %>% 
-#   filter(digest_id %in% ligs$digest_id) %>% 
-#   select(digest_id, quant, well, plate) %>% 
-#   collect() %>% 
-#   rename(dig_well = well, dig_plate = plate)
-
-# ligs <- left_join(ligs, digs[, c("digest_id", "dig_well", "dig_plate")], by = "digest_id") %>% 
-#   arrange(ligation_id)
-
-# # how many ligation plates are there? This is also the number of tip plates needed, so double it.
-# (lig_plates <- ligs %>% 
-#     distinct(plate))
-# x <- nrow(lig_plates)
-
 # just plan one lig plate at a time but still need plate name for code to work
 lig_plates <- ligs %>% 
   distinct(plate)
@@ -80,22 +65,22 @@ if (nrow(dig_plates) <= length(mek_loc)){
 biomek <- ligs %>% 
   select(well, dest, vol_in, ligation_id, digest_id) %>% 
   rename(
-    dest_well = well,
-    dest_loc = dest,
-    source_vol = vol_in
+    lig_well = well,
+    lig_loc = dest,
+    dig_vol = vol_in
   )
 
 # pull the necessary columns from the source table and rename columns
 temp <- source %>% 
   select(well, source, digest_id) %>% 
   rename(
-    source_well = well,
-    source_loc = source
+    dig_well = well,
+    dig_loc = source
   )
 
 # join the two sets of columns and rearrange order of columns
 biomek <- left_join(biomek, temp, by = "digest_id") %>% 
-  select(ligation_id, digest_id, dest_well, source_well, dest_loc, source_loc, source_vol) 
+  select(ligation_id, digest_id, lig_well, dig_well, lig_loc, dig_loc, dig_vol) 
 rm(temp)
 
 # write.csv(biomek, file = paste(Sys.Date(), "_biomek.csv", sep = ""))
@@ -105,24 +90,19 @@ rm(temp)
 water_file <- ligs %>% 
   select(ligation_id, water, well, dest) %>% 
   rename(
-    source_vol = water,
-    dest_well = well,
-    dest_loc = dest
+    water_vol = water,
+    lig_well = well,
+    lig_loc = dest
   )%>% 
   mutate(
-    source_loc = water,
+    water_loc = water,
     water_well = "D6"
     )
 
 # write.csv(water_file, file = paste(Sys.Date(), "_biomek_water.csv", sep = ""))
 
 # just in case you can have one file for both water and samples
-water_file <- water_file %>% 
-  rename(
-    water_vol = source_vol,
-    water_loc = source_loc
-  )
 
-combo <- left_join(biomek, water_file, by = c("ligation_id", "dest_well", "dest_loc"))
+combo <- left_join(biomek, water_file, by = c("ligation_id", "lig_well", "lig_loc"))
 
 # write.csv(combo, file = paste(Sys.Date(), "_biomek_combo.csv", sep = ""))
