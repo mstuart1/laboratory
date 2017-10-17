@@ -49,7 +49,7 @@ plate_from_db <- function(table_name, id_type){
   # select columns for plate 
   if (id_type == "extraction_id"){
     table_name <- table_name %>% 
-      select(row, col, id_type) %>% #keep row & col, identifier
+      select(row, col, extraction_id) %>% #keep row & col, identifier
       arrange(row, col)
   }
   if (id_type == "sample_id"){
