@@ -124,7 +124,7 @@ for (i in 1:nrow(nplates)){
   name <- digest %>% 
     filter(dig_plate == x)
   if (nrow(name) > 0){
-    digest <- anti_join(digest, name, by = "extraction_id") # remove these rows from digest
+    digest <- anti_join(digest, name, by = "dig_plate") # remove these rows from digest
     a <- name %>% filter(dig_well == "A1") %>% select(digest_id) # get the first digest
     b <- name %>% filter(dig_well == "H12") %>% select(digest_id) # get the last digest
     name$dig_plate <- paste(a, "-", b, sep = "")
