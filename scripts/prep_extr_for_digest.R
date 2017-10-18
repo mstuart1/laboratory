@@ -198,14 +198,19 @@ digest <- digest %>%
 # rm(temp, temp2, i, j, plate, platemap, digests, extr_plates)
 # 
 # # find any extracts in the plan that need to be diluted (add 15uL sample plus
-# # 15uL water instead of 30uL sample)
-# extr <- lab %>% 
-#   tbl("extraction") %>% 
-#   filter(extraction_id %in% digs$extraction_id) %>% 
-#   mutate(DNA = quant * 30) %>% # multiply the quant by 30 to calculate how much DNA will be digested
-#   filter(DNA > 5000) %>% # find any samples that will contain more than 5ug in the digest
-#   arrange(extraction_id) %>% 
-#   collect()
+# 15uL water instead of 30uL sample)
+digs <- lab %>%
+  tbl("digest") %>% 
+  collect() %>% 
+  filter(grepl("October 2017", notes))
+
+extr <- lab %>%
+  tbl("extraction") %>%
+  filter(extraction_id %in% digs$extraction_id) %>%
+  mutate(DNA = quant * 30) %>% # multiply the quant by 30 to calculate how much DNA will be digested
+  filter(DNA > 5000) %>% # find any samples that will contain more than 5ug in the digest
+  arrange(extraction_id) %>%
+  collect()
 # 
 # # double check that 15 will reduce it enough - the following should result in zero
 # fifteen <- extr %>%
@@ -215,19 +220,19 @@ digest <- digest %>%
 
 # find these samples and make sure to highlight on plate maps, only add 15uL sample to digest
 
-# to print plates
-library(gridExtra)
-
-file_list <- sort(list.files(path = "output", pattern = "2017-10-18*")) # produces list of output files 
-
-for (i in 1:length(file_list)){
-  infile <- paste("output/", file_list[i], sep = "")
-  t <- read.csv(infile)
-  out <- paste("output/", substr(file_list[i], 1, nchar(file_list[i])-4), ".pdf",  sep = "")
-  pdf(out, height=11, width = 8.5)
-  grid.table(t)
-  dev.off()
-}
+# # to print plates
+# library(gridExtra)
+# 
+# file_list <- sort(list.files(path = "output", pattern = "2017-10-18*")) # produces list of output files 
+# 
+# for (i in 1:length(file_list)){
+#   infile <- paste("output/", file_list[i], sep = "")
+#   t <- read.csv(infile)
+#   out <- paste("output/", substr(file_list[i], 1, nchar(file_list[i])-4), ".pdf",  sep = "")
+#   pdf(out, height=11, width = 8.5)
+#   grid.table(t)
+#   dev.off()
+# }
 
 
   
