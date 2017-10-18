@@ -145,75 +145,89 @@ digest <- digest %>%
 # dbDisconnect(lab)
 # rm(lab)
 
-# make plate maps to copy elsewhere or print ####
-
-# connect to the database
-lab <- read_db("Laboratory")
-
-# pull in digest plate from the database (or list of plates) - based on planning notes
-digs <- lab %>% 
-  tbl("digest") %>%
-  collect() %>% 
-  filter(grepl("October 2017", notes))
-
-digests <- digs %>% 
-  distinct(plate)
-
-for (i in 1:nrow(digests)){ # break it down into one plate at a time
-  # make a platemap for where extracts are supposed to end up
-  temp <- digs %>% 
-    filter(plate == digests$plate[i])
-  plate <- plate_from_db(temp, "extraction_id") # this will give an error if you try to do more than one plate at once
-  write.csv(platemap, file = paste("output/", Sys.Date(), "_extract_dest_plate", i, ".csv", sep = ""))
-  
-  # repeat for what the digest names will be 
-  plate <- plate_from_db(temp, "digest_id")
-  write.csv(platemap, file = paste("output/", Sys.Date(), "_digest_dest_plate", i, ".csv", sep = ""))
-  
-  # get plate maps for sources
-  extr <- lab %>%
-    tbl("extraction") %>% 
-    filter(extraction_id %in% temp$extraction_id) %>% 
-    collect()
-  
-  extr_plates <- extr %>% 
-    distinct(plate)
-  
-  # need whole plates from extractions, so create a new table of all of the extracts in source plates
-  source <- lab %>% 
-    tbl("extraction") %>% 
-    collect() %>% 
-    filter(plate %in% extr_plates$plate) 
-    
-  
-  for(j in 1:nrow(extr_plates)){
-    temp2 <- source %>% 
-      filter(plate == extr_plates$plate[j])
-    plate <- plate_from_db(temp2, "extraction_id") # this will give an error if you try to do more than one plate at once
-    write.csv(platemap, file = paste("output/", Sys.Date(), "_extract_source_plate", i,"_", j, ".csv", sep = ""))
-    
-  }
-  
-}
-rm(temp, temp2, i, j, plate, platemap, digests, extr_plates)
-
-# find any extracts in the plan that need to be diluted (add 15uL sample plus
-# 15uL water instead of 30uL sample)
-extr <- lab %>% 
-  tbl("extraction") %>% 
-  filter(extraction_id %in% digs$extraction_id) %>% 
-  mutate(DNA = quant * 30) %>% # multiply the quant by 30 to calculate how much DNA will be digested
-  filter(DNA > 5000) %>% # find any samples that will contain more than 5ug in the digest
-  arrange(extraction_id) %>% 
-  collect()
-
-# double check that 15 will reduce it enough - the following should result in zero
-fifteen <- extr %>%
-  mutate(DNA = quant * 15) %>% 
-  filter(DNA > 5000) %>% 
-  arrange(extraction_id)
+# # make plate maps to copy elsewhere or print ####
+# 
+# # connect to the database
+# lab <- read_db("Laboratory")
+# 
+# # pull in digest plate from the database (or list of plates) - based on planning notes
+# digs <- lab %>% 
+#   tbl("digest") %>%
+#   collect() %>% 
+#   filter(grepl("October 2017", notes))
+# 
+# digests <- digs %>% 
+#   distinct(plate)
+# 
+# for (i in 1:nrow(digests)){ # break it down into one plate at a time
+#   # make a platemap for where extracts are supposed to end up
+#   temp <- digs %>% 
+#     filter(plate == digests$plate[i])
+#   plate <- plate_from_db(temp, "extraction_id") # this will give an error if you try to do more than one plate at once
+#   write.csv(platemap, file = paste("output/", Sys.Date(), "_extract_dest_plate", i, ".csv", sep = ""))
+#   
+#   # repeat for what the digest names will be 
+#   plate <- plate_from_db(temp, "digest_id")
+#   write.csv(platemap, file = paste("output/", Sys.Date(), "_digest_dest_plate", i, ".csv", sep = ""))
+#   
+#   # get plate maps for sources
+#   extr <- lab %>%
+#     tbl("extraction") %>% 
+#     filter(extraction_id %in% temp$extraction_id) %>% 
+#     collect()
+#   
+#   extr_plates <- extr %>% 
+#     distinct(plate)
+#   
+#   # need whole plates from extractions, so create a new table of all of the extracts in source plates
+#   source <- lab %>% 
+#     tbl("extraction") %>% 
+#     collect() %>% 
+#     filter(plate %in% extr_plates$plate) 
+#     
+#   
+#   for(j in 1:nrow(extr_plates)){
+#     temp2 <- source %>% 
+#       filter(plate == extr_plates$plate[j])
+#     plate <- plate_from_db(temp2, "extraction_id") # this will give an error if you try to do more than one plate at once
+#     write.csv(platemap, file = paste("output/", Sys.Date(), "_extract_source_plate", i,"_", j, ".csv", sep = ""))
+#     
+#   }
+#   
+# }
+# rm(temp, temp2, i, j, plate, platemap, digests, extr_plates)
+# 
+# # find any extracts in the plan that need to be diluted (add 15uL sample plus
+# # 15uL water instead of 30uL sample)
+# extr <- lab %>% 
+#   tbl("extraction") %>% 
+#   filter(extraction_id %in% digs$extraction_id) %>% 
+#   mutate(DNA = quant * 30) %>% # multiply the quant by 30 to calculate how much DNA will be digested
+#   filter(DNA > 5000) %>% # find any samples that will contain more than 5ug in the digest
+#   arrange(extraction_id) %>% 
+#   collect()
+# 
+# # double check that 15 will reduce it enough - the following should result in zero
+# fifteen <- extr %>%
+#   mutate(DNA = quant * 15) %>% 
+#   filter(DNA > 5000) %>% 
+#   arrange(extraction_id)
 
 # find these samples and make sure to highlight on plate maps, only add 15uL sample to digest
+
+# to print plates
+library(gridExtra)
+
+file_list <- sort(list.files(path = "output", pattern = "2017-10-18*")) # produces list of output files 
+
+for (i in 1:length(file_list)){
+  infile <- paste("output/", file_list[i], sep = "")
+  t <- read.csv(infile)
+  out <- paste("output/", substr(file_list[i], 1, nchar(file_list[i])-4), ".pdf",  sep = "")
+  pdf(out, height=11, width = 8.5)
+  grid.table(t)
+  dev.off()
+}
 
 
   
