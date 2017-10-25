@@ -9,7 +9,7 @@ lab <- read_db("Laboratory")
 x <- "extraction"
 
 # which plates need to be read?
-todo <- lab %>% 
+work <- lab %>% 
   tbl(x) %>% 
   filter(is.na(quant)) %>% # if you want any unquantified plates
   # filter(plate == "E3161-E3254" | plate == "E3255-E3348" | plate == "E3349-E3442" | plate == "E3443-E3536") %>%  # if you want to specify plates
@@ -19,30 +19,30 @@ todo <- lab %>%
   select(1:2, well, plate) # the first 2 columns of any table are the id columns
 
 # move the twelfth plate to it's own table - its firsts will not fit with the others
-twelve <- todo %>% 
+twelve <- work %>% 
   filter(plate == "E4195-E4288")
 
-todo <- anti_join(todo, twelve, by = "extraction_id")
+work <- anti_join(work, twelve, by = "extraction_id")
 
 # all of the first columns are going to be replaced with standards, grab samples to be moved
-firsts <- todo %>% 
+firsts <- work %>% 
   filter(grepl("1", well) & !grepl("11", well) & !grepl("10", well) & !grepl("12", well))
 
-# after the first have been moved to a new table, replace them on the todo table with standards
+# after the first have been moved to a new table, replace them on the work table with standards
 stds <- firsts %>% 
   mutate(extraction_id = "STD", 
     digest_id = "STD",
     sample_id = "STD") %>% 
-  select(-5) # remove the last column, which doesn't match todo
+  select(-5) # remove the last column, which doesn't match work
 
-# remove those unchanged rows from todo
-todo <- anti_join(todo, stds, by = c("well", "plate"))
+# remove those unchanged rows from work
+work <- anti_join(work, stds, by = c("well", "plate"))
 # add in the changed rows
-todo <- rbind(todo, stds)
+work <- rbind(work, stds)
   
 
 # make a list of plate names
-plates <- todo %>% 
+plates <- work %>% 
   select(plate) %>% 
   distinct() %>% 
   filter(!is.na(plate)) %>% 
@@ -53,7 +53,7 @@ plates <- todo %>%
 for (i in 1:nrow(plates)){ # can't have more than 11 columns of samples on a firsts plate
   # filter down to one plate
   x <- plates$plate[i]
-  current <- todo %>% 
+  current <- work %>% 
     filter(plate == x)
   # prep a map
   plate <- plate_from_db(current, "extraction_id")
@@ -106,7 +106,7 @@ names(temp) <- names(firsts)
     digest_id = "STD",
     sample_id = "STD") %>% 
     mutate(plate = "firsts") %>% 
-    select(-5) %>%  # remove the last column, which doesn't match todo
+    select(-5) %>%  # remove the last column, which doesn't match work
     distinct()
   
   # join back to firsts
@@ -160,7 +160,7 @@ names(temp) <- names(firsts)
   #     digest_id = "STD",
   #     sample_id = "STD") %>% 
   #   mutate(plate = "firsts") %>% 
-  #   select(-5) %>%  # remove the last column, which doesn't match todo
+  #   select(-5) %>%  # remove the last column, which doesn't match work
   #   distinct()
   # 
   # # join back to firsts

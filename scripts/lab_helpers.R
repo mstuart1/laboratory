@@ -39,7 +39,7 @@ write_db <- function(db_name){
 #' @param x = the table of samples to turn into a plate
 #' @param y = the sample identifier you want to use
 #' @examples 
-#' plate <- plate_from_db(todo, extraction_id)
+#' plate <- plate_from_db(fish, extraction_id)
 
 plate_from_db <- function(table_name, id_type){
   # split the well out into row and column 
@@ -84,7 +84,7 @@ plate_from_db <- function(table_name, id_type){
 #' @param x = list of ids
 #' @param y = id_type
 #' @examples 
-#' plate <- make_plate_with_negs(todo)
+#' plate <- make_plate_with_negs(fish)
 
 make_plate_with_negs <- function(list_of_ids, id_type){
   # make a dataframe of the list_of_ids
@@ -147,7 +147,7 @@ make_plate_with_negs <- function(list_of_ids, id_type){
 #' @param x = list of ids
 #' @param y = id_type
 #' @examples 
-#' plate <- make_plate_with_negs(todo)
+#' plate <- make_plate_with_negs(fish)
 
 
 

@@ -5,22 +5,22 @@ lab <- write_db("Laboratory")
 
 # THIS DEPENDS ON WHICH TABLE YOU WANT TO WORK WITH 
 
-#for this iteration this script, I am going to change the notes on a group of extractions
-
-# pull in all extractions
-digs <- lab %>% dbReadTable("digest") %>% collect()
-
-# which(duplicated(extr$extraction_id) == T) # a test to see if any extraction ids are duplicated
-
-change <- digs %>% 
-  filter(plate == "D4108-D4203") %>%
-  # filter(extraction_id >= "E4289") %>% 
-  # mutate(notes = "remaining fin clips don't fit into a set of 2 96 well plates, plan alternative") %>% 
-  # mutate(plate = NA)
-  mutate(date = "2017-10-17", notes = NA)
-  # mutate(notes = NA)
-
-digs <- change_rows(digs, change, "digest_id")
+# #for this iteration this script, I am going to change the notes on a group of digests
+# 
+# # pull in all table
+# digs <- lab %>% dbReadTable("digest") %>% collect()
+# 
+# # which(duplicated(extr$extraction_id) == T) # a test to see if any extraction ids are duplicated
+# 
+# change <- digs %>% 
+#   filter(plate == "D4108-D4203") %>%
+#   # filter(extraction_id >= "E4289") %>% 
+#   # mutate(notes = "remaining fin clips don't fit into a set of 2 96 well plates, plan alternative") %>% 
+#   # mutate(plate = NA)
+#   mutate(date = "2017-10-17", notes = NA)
+#   # mutate(notes = NA)
+# 
+# digs <- change_rows(digs, change, "digest_id")
 
 # write the changes to the db
 ################### BE CAREFUL ########################################
@@ -33,24 +33,24 @@ digs <- change_rows(digs, change, "digest_id")
 # #for this iteration this script, I am going to change the notes on a group of extractions
 # 
 # # pull in all extractions
-# extr <- lab %>% dbReadTable("extraction") %>% collect()
+extr <- lab %>% dbReadTable("extraction") %>% collect()
 # 
 # # which(duplicated(extr$extraction_id) == T) # a test to see if any extraction ids are duplicated
 # 
-# change <- extr %>% 
-#   filter(plate == "E4007-E4100" | plate == "E3913-E4006") %>%
-#   # filter(extraction_id >= "E4289") %>% 
-#   # mutate(notes = "remaining fin clips don't fit into a set of 2 96 well plates, plan alternative") %>% 
-#   # mutate(plate = NA)
-#   mutate(date = "2017-10-03", notes = NA)
-# # mutate(notes = NA)
+change <- extr %>%
+  filter(plate == "E0151-E0246") %>%
+  # filter(extraction_id >= "E4289") %>%
+  mutate(notes = paste("empty - ", notes, sep = ""))
+  # mutate(plate = NA)
+  # mutate(date = "2017-10-03", notes = NA)
+# mutate(notes = NA)
 # 
 # 
 # # remove those few from the whole group (the extraction ids are for prechange rows)
-# extr <- anti_join(extr, change, by = "extraction_id")
+extr <- anti_join(extr, change, by = "extraction_id")
 # 
 # # add in the changed rows
-# extr <- rbind(extr, change)
+extr <- rbind(extr, change)
 # 
 # # write the changes to the db
 # ################### BE CAREFUL ########################################
