@@ -7,7 +7,7 @@ source("scripts/lab_helpers.R")
 
 # look up the data files - fetched from amphiprion
 pools <- list.files(path = "data/", pattern = "process.out.tsv")
-names <- list.files(path = "data/", pattern = "names-")
+names <- list.files(path = "data/", pattern = "names")
 
 
 # create an empty dataframe

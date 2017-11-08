@@ -10,7 +10,7 @@ table = "digest"
 # table = "ligation"
 
 # which plate is it?
-range = "D3820-D3915"
+range = "D3340-D3435"
 
 # read in plate reader data for the first plate
 platefile1 = "data/2017-11-07-plate06.txt"
