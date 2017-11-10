@@ -35,7 +35,7 @@ for (i in 1:nrow(platelist1)){
 
 # create digest numbers for these samples ####
 redigs <- extr %>% 
-  filter(plate == "E2450-E2545") %>% 
+  filter(plate == "E2546-E2641") %>% 
   mutate(dig_well = well)
 
 # double check that there are no duplicate wells
