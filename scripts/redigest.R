@@ -35,19 +35,14 @@ for (i in 1:nrow(platelist1)){
 
 # create digest numbers for these samples ####
 sub <- extr %>% 
-  filter(plate == "E2258-E2353") %>% 
+  filter(plate == "E2901-E2967" & extraction_id != "E2949") %>% 
   mutate(dig_well = well)
 redigs <- sub
 sub <- extr %>% 
-  filter(plate == "E2642-E2737" & 
-           !extraction_id %in% c("E2643", "E2644", "E2645", "E2650", "E2652", "E2653", "E2654", "E2656", "E2657", "E2658", "E2662", "E2678", "E2696", "E2697", "E2732")) %>% 
-  mutate(dig_well = c("B6", "C6", "G11", "E12", "G12"))
+  filter(plate == "E2834-E2900") %>% 
+  mutate(dig_well = c("D7", "E7", "F7", "G1", "H1", "C4", "G2", "H2", "F12","D5", "F3", "A6", "G3", "F4", "G4", "H4", "E6", "H3", "G5", "H5", "G6", "H6", "B7", "G7", "H7", "D8", "F8", "G8", "H8", "A9", "B9", "F9", "G9", "H9", "F10", "G10", "H10", "F11", "G11", "H11"))
+redigs <- rbind(redigs, sub)
 
-redigs <- rbind(redigs, sub)
-sub <- extr %>% 
-  filter(plate == "E1207-E1302" & !extraction_id %in% c("E1208", "E1243", "E1250", "E1253", "E1254")) %>% 
-  mutate(dig_well = c("F1", "A2", "B2", "C2", "D2", "E2", "F2", "G2", "H2", "C5"))
-redigs <- rbind(redigs, sub)
 
 # double check that there are no duplicate wells
 test <- redigs %>% 
