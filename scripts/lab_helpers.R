@@ -88,10 +88,10 @@ plate_from_db <- function(table_name, id_type){
 
 make_plate_with_negs <- function(list_of_ids, id_type){
   # make a dataframe of the list_of_ids
-  list_of_ids <- as.data.frame(list_of_ids)
-  
+  ids <- data.frame(list_of_ids, stringsAsFactors = F)
+ 
   # how many rows are in the table (how many samples)?
-  y <- nrow(list_of_ids)
+  y <- nrow(ids)
 
   # how many plates would these make, 94 samples plus 2 blanks per plate
   (nplates <- floor(y/94)) # extra parenthesis are to print
@@ -102,31 +102,31 @@ make_plate_with_negs <- function(list_of_ids, id_type){
   # insert the negative controls and set up the plate
   plate <- data.frame() # blank data frame to build upon
   for (i in 1:nplates){
-    c <- 94*i-93 # well 1 on a plate
-    d <- 94*i-83 # 11
-    e <- 94*i-82 # 12 negative control well
-    f <- 94*i-81 # 13
-    g <- 94*i-34 # 60
-    h <- 94*i-33 # 61 negative control well
-    j <- 94*i-32 # 62
-    k <- 94*i + 2 # 96
-    l <- 94*i - 35 # 59
-    m <- 94 * i #94
-    str1 <- as.data.frame(cbind(well[c:d], list_of_ids[c:d,])) # 1:11
+    c <- 96*i-95 # well 1 on a plate
+    d <- 96*i-85 # 11
+    e <- 96*i-84 # 12 negative control well
+    f <- 96*i-83 # 13
+    g <- 96*i-36 # 60
+    h <- 96*i-35 # 61 negative control well
+    j <- 96*i-34 # 62
+    k <- 96*i-2  # 94
+    l <- 96*i - 37 # 59
+    m <- 96*i #96
+    str1 <- as.data.frame(cbind(well[c:d], ids[c:d,])) # 1:11
     names(str1) <- c("well", "id_type")
     str2 <- as.data.frame(cbind(well[e], "XXXX")) # because the first blank is in the 12th position
     names(str2) <- c("well", "id_type")
-    str3 <- as.data.frame(cbind(well[f:g], list_of_ids[e:l,])) #13:60 in plate, 12:59 in list
+    str3 <- as.data.frame(cbind(well[f:g], ids[e:l,])) #13:60 in plate, 12:59 in list
     names(str3) <- c("well", "id_type")
     str4 <- as.data.frame(cbind(well[h], "XXXX")) # because the 2nd blank is in the 61st position
     names(str4) <- c("well", "id_type")
-    str5 <- as.data.frame(cbind(well[j:k], list_of_ids[g:m,]))# 62:96 in plate, 60:94 in list
+    str5 <- as.data.frame(cbind(well[j:k], ids[g:k,]))# 62:96 in plate, 60:94 in list
     names(str5) <- c("well", "id_type")
     
     # and stick all of the rows together
     temp <- data.frame(rbind(str1, str2, str3, str4, str5))
-    temp$Row <- rep(LETTERS[1:8], 12)
-    temp$Col <- unlist(lapply(1:12, rep, 8))
+    temp$row <- rep(LETTERS[1:8], 12)
+    temp$col <- unlist(lapply(1:12, rep, 8))
     temp$plate <- paste("plate", i, sep = "")
     plate <- rbind(plate, temp)
     
@@ -182,10 +182,10 @@ remove_rows <- function(table_name, how_many_wells){
 
 make_plate <- function(list_of_ids){
   # make a dataframe of the list_of_ids
-  list_of_ids <- as.data.frame(list_of_ids)
+  ids <- as.data.frame(list_of_ids)
   
   # how many rows are in the table (how many samples)?
-  y <- nrow(list_of_ids)
+  y <- nrow(ids)
   
   if (y >= 96){
     
@@ -193,7 +193,7 @@ make_plate <- function(list_of_ids){
   (nplates <- floor(y/96)) # extra parenthesis are to print
   
   # remove those rows that don't fit into plates
-  list_of_ids <- remove_rows(list_of_ids, 96)
+  ids <- remove_rows(ids, 96)
   
   # define wells
   well <- 1:(96*nplates)
@@ -203,7 +203,7 @@ make_plate <- function(list_of_ids){
   for (i in 1:nplates){
     a <- 96*i-95 # position 1
     b <- 96*i     # position 96
-    temp <- cbind(well[a:b], as.data.frame(list_of_ids[a:b, ]))
+    temp <- cbind(well[a:b], as.data.frame(ids[a:b, ]))
     temp$row <- rep(LETTERS[1:8], 12)
     temp$col = unlist(lapply(1:12, rep, 8))
     temp$plate = paste("plate", i, sep = "")
@@ -216,7 +216,7 @@ make_plate <- function(list_of_ids){
   }else{
     plate <- data.frame( Row = rep(LETTERS[1:8], 12), Col = unlist(lapply(1:12, rep, 8)))
     plate <- plate[1:y,]
-    plate <- cbind(plate, list_of_ids)
+    plate <- cbind(plate, ids)
     plate$plate <- "shortplate1"
     }
     
