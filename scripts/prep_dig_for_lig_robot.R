@@ -20,39 +20,10 @@ dig <- dbReadTable(lab, "digest") %>%
   arrange(digest_id)
 
 # TRYING A NEW STRATEGY TO LIGATE AT 10NG FIRST AND THEN UP THE QUANTITY ####
-ten <- dig %>% 
-  mutate(uL_in = round(10/quant, 1)) %>% # round to 1 decimal point
-  filter(uL_in < 22.2 & uL_in > 0.5) %>% 
-  mutate(water = round(22.2-uL_in, 1)) %>% 
-  mutate(DNA = 10)
+DNA <- 10
+ten <- lig_ng(dig, DNA)
 
-if (nrow(ten)/47 > 1){ # if there are more than 47 (because we are regenotyping 2 per pool)
-  x <- nrow(ten) %% 47 # get the remainder after dividing by 47
-  ten <- ten %>% 
-    arrange(uL_in) %>% 
-    slice(1:(nrow(ten) - x))
-  dig <- anti_join(dig, ten, by = "digest_id") # dig will hold whatever was not used
-}else {
-  rm(ten) # remove the 10ng option if there aren't 47 samples that will work
-}
 
-if (nrow(dig >= 47)){
-  twenty_five <- dig %>%
-    mutate(uL_in = round(25/quant, 1)) %>% # round to 1 decimal point
-    filter(uL_in < 22.2 & uL_in > 0.5) %>%
-    mutate(water = round(22.2-uL_in, 1)) %>%
-    mutate(DNA = 25)
-
-  if (nrow(twenty_five)/47 > 1){ # if there are more than 47
-    x <- nrow(twenty_five) %% 47 # get the remainder after dividing by 47
-    twenty_five <- twenty_five %>%
-      arrange(uL_in) %>%
-      slice(1:(nrow(twenty_five) - x))
-    dig <- anti_join(dig, twenty_five, by = "digest_id")
-  }else {
-    rm(twenty_five)
-  }
-}
 if (nrow(dig >=47)){
   fifty <- dig %>%
     mutate(uL_in = round(50/quant, 1)) %>% # round to 1 decimal point
@@ -60,10 +31,10 @@ if (nrow(dig >=47)){
     mutate(water = round(22.2-uL_in, 1)) %>%
     mutate(DNA = 50)
 
-  if (nrow(fifty)/47 > 1){ # if there are more than 47
+  if (nrow(fifty)/47 >= 1){ # if there are more than 47
     x <- nrow(fifty) %% 47 # get the remainder after dividing by 47
     fifty <- fifty %>%
-      arrange(uL_in) %>%
+      arrange(desc(uL_in)) %>% # keep the largest pipet volumes
       slice(1:(nrow(fifty) - x))
     dig <- anti_join(dig, fifty, by = "digest_id")
   }else {
@@ -77,10 +48,10 @@ if (nrow(dig >=47)){
       mutate(water = round(22.2-uL_in, 1)) %>%
       mutate(DNA = 75)
   
-  if (nrow(s75)/47 > 1){ # if there are more than 47
+  if (nrow(s75)/47 >= 1){ # if there are more than 47
       x <- nrow(s75) %% 47 # get the remainder after dividing by 47
       s75 <- s75 %>%
-        arrange(uL_in) %>%
+        arrange(desc(uL_in)) %>% # keep the largest pipet volumes
         slice(1:(nrow(s75) - x))
       dig <- anti_join(dig, s75, by = "digest_id")
     }else {
@@ -95,10 +66,10 @@ if (nrow(dig >=47)){
     mutate(water = round(22.2-uL_in, 1)) %>%
     mutate(DNA = 100)
 
-  if (nrow(one_hundred)/47 > 1){ # make sure there are at least 47
+  if (nrow(one_hundred)/47 >= 1){ # make sure there are at least 47
     x <- nrow(one_hundred) %% 47 # get the remainder after dividing by 47
     one_hundred <- one_hundred %>%
-      arrange(uL_in) %>%
+      arrange(desc(uL_in)) %>% # keep the largest pipet volumes
       slice(1:(nrow(one_hundred) - x))
     dig <- anti_join(dig, one_hundred, by = "digest_id")
   }else {
@@ -112,10 +83,10 @@ if (nrow(dig >=47)){
     mutate(water = round(22.2-uL_in, 1)) %>%
     mutate(DNA = 150)
 
-  if (nrow(one_fifty)/47 > 1){ # make sure there are at least 47
+  if (nrow(one_fifty)/47 >= 1){ # make sure there are at least 47
     x <- nrow(one_fifty) %% 47 # get the remainder after dividing by 47
     one_fifty <- one_fifty %>%
-      arrange(uL_in) %>%
+      arrange(desc(uL_in)) %>% # keep the largest pipet volumes
       slice(1:(nrow(one_fifty) - x))
     dig <- anti_join(dig, one_fifty, by = "digest_id")
   }else {
@@ -129,10 +100,10 @@ if (nrow(dig >=47)){
     mutate(water = round(22.2-uL_in, 1)) %>%
     mutate(DNA = 200)
   
-  if (nrow(two_hundred)/47 > 1){ # make sure there are at least 47
+  if (nrow(two_hundred)/47 >= 1){ # make sure there are at least 47
     x <- nrow(two_hundred) %% 47 # get the remainder after dividing by 47
     two_hundred <- two_hundred %>%
-      arrange(uL_in) %>%
+      arrange(desc(uL_in)) %>% # keep the largest pipet volumes
       slice(1:(nrow(two_hundred) - x))
     dig <- anti_join(dig, two_hundred, by = "digest_id")
   }else {
@@ -146,13 +117,7 @@ if (nrow(dig >=47)){
 
 
 
-# rbind(
-#   two_hundred, 
-#   one_fifty, 
-#   one_hundred, 
-#   fifty, 
-#   twenty_five, 
-#   ten)
+
 
 
 
