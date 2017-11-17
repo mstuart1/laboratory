@@ -6,7 +6,7 @@ library(stringr)
 source("scripts/lab_helpers.R")
 
 # look up the data files - fetched from amphiprion
-pools <- list.files(path = "data/", pattern = "process.out.tsv")
+pools <- list.files(path = "data/", pattern = "process")
 names <- list.files(path = "data/", pattern = "names")
 
 
@@ -37,7 +37,11 @@ for (i in 1:length(pools)){
 
 # get rid of extra characters in ligation_ids from read data
 # create a search string to find ligation ids
-ligid <- "(.+)(L\\d\\d\\d\\d)" 
+ligid <- "(.+)(L\\d\\d\\d\\d)(.+)"
+# ligid <- "(L\\d\\d\\d\\d)(.+)" 
+# ligid <- "(.+)(L\\d\\d\\d\\d)(.+)" 
+# test # 
+str_detect(reads$ligation_id, ligid)
 # change all of the names to ligation id only
 reads$ligation_id <- reads$ligation_id %>% str_replace(ligid,"\\2")
 # rename this column so the purpose is clear
