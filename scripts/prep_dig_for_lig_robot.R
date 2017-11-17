@@ -26,25 +26,25 @@ ten <- dig %>%
   mutate(water = round(22.2-uL_in, 1)) %>% 
   mutate(DNA = 10)
 
-if (nrow(ten)/46 > 1){ # if there are more than 46 (because we are regenotyping 2 per pool)
-  x <- nrow(ten) %% 46 # get the remainder after dividing by 46
+if (nrow(ten)/47 > 1){ # if there are more than 47 (because we are regenotyping 2 per pool)
+  x <- nrow(ten) %% 47 # get the remainder after dividing by 47
   ten <- ten %>% 
     arrange(uL_in) %>% 
     slice(1:(nrow(ten) - x))
   dig <- anti_join(dig, ten, by = "digest_id") # dig will hold whatever was not used
 }else {
-  rm(ten) # remove the 10ng option if there aren't 46 samples that will work
+  rm(ten) # remove the 10ng option if there aren't 47 samples that will work
 }
 
-if (nrow(dig >= 46)){
+if (nrow(dig >= 47)){
   twenty_five <- dig %>%
     mutate(uL_in = round(25/quant, 1)) %>% # round to 1 decimal point
     filter(uL_in < 22.2 & uL_in > 0.5) %>%
     mutate(water = round(22.2-uL_in, 1)) %>%
     mutate(DNA = 25)
 
-  if (nrow(twenty_five)/46 > 1){ # if there are more than 46
-    x <- nrow(twenty_five) %% 46 # get the remainder after dividing by 46
+  if (nrow(twenty_five)/47 > 1){ # if there are more than 47
+    x <- nrow(twenty_five) %% 47 # get the remainder after dividing by 47
     twenty_five <- twenty_five %>%
       arrange(uL_in) %>%
       slice(1:(nrow(twenty_five) - x))
@@ -53,15 +53,15 @@ if (nrow(dig >= 46)){
     rm(twenty_five)
   }
 }
-if (nrow(dig >=46)){
+if (nrow(dig >=47)){
   fifty <- dig %>%
     mutate(uL_in = round(50/quant, 1)) %>% # round to 1 decimal point
     filter(uL_in < 22.2 & uL_in > 0.5) %>%
     mutate(water = round(22.2-uL_in, 1)) %>%
     mutate(DNA = 50)
 
-  if (nrow(fifty)/46 > 1){ # if there are more than 46
-    x <- nrow(fifty) %% 46 # get the remainder after dividing by 46
+  if (nrow(fifty)/47 > 1){ # if there are more than 47
+    x <- nrow(fifty) %% 47 # get the remainder after dividing by 47
     fifty <- fifty %>%
       arrange(uL_in) %>%
       slice(1:(nrow(fifty) - x))
@@ -70,15 +70,15 @@ if (nrow(dig >=46)){
     rm(fifty)
   }
 }
-if (nrow(dig >=46)){
+if (nrow(dig >=47)){
   s75 <- dig %>%
       mutate(uL_in = round(75/quant, 1)) %>% # round to 1 decimal point
       filter(uL_in < 22.2 & uL_in > 0.5) %>%
       mutate(water = round(22.2-uL_in, 1)) %>%
       mutate(DNA = 75)
   
-  if (nrow(s75)/46 > 1){ # if there are more than 46
-      x <- nrow(s75) %% 46 # get the remainder after dividing by 46
+  if (nrow(s75)/47 > 1){ # if there are more than 47
+      x <- nrow(s75) %% 47 # get the remainder after dividing by 47
       s75 <- s75 %>%
         arrange(uL_in) %>%
         slice(1:(nrow(s75) - x))
@@ -88,15 +88,15 @@ if (nrow(dig >=46)){
     }
 }
 
-if (nrow(dig >=46)){
+if (nrow(dig >=47)){
   one_hundred <- dig %>%
     mutate(uL_in = round(100/quant, 1)) %>% # round to 1 decimal point
     filter(uL_in < 22.2 & uL_in > 0.5) %>%
     mutate(water = round(22.2-uL_in, 1)) %>%
     mutate(DNA = 100)
 
-  if (nrow(one_hundred)/46 > 1){ # make sure there are at least 46
-    x <- nrow(one_hundred) %% 46 # get the remainder after dividing by 46
+  if (nrow(one_hundred)/47 > 1){ # make sure there are at least 47
+    x <- nrow(one_hundred) %% 47 # get the remainder after dividing by 47
     one_hundred <- one_hundred %>%
       arrange(uL_in) %>%
       slice(1:(nrow(one_hundred) - x))
@@ -105,15 +105,15 @@ if (nrow(dig >=46)){
     rm(one_hundred)
   }
 }
-if (nrow(dig >=46)){
+if (nrow(dig >=47)){
   one_fifty <- dig %>%
     mutate(uL_in = round(150/quant, 1)) %>% # round to 1 decimal point
     filter(uL_in < 22.2 & uL_in > 0.5) %>%
     mutate(water = round(22.2-uL_in, 1)) %>%
     mutate(DNA = 150)
 
-  if (nrow(one_fifty)/46 > 1){ # make sure there are at least 46
-    x <- nrow(one_fifty) %% 46 # get the remainder after dividing by 46
+  if (nrow(one_fifty)/47 > 1){ # make sure there are at least 47
+    x <- nrow(one_fifty) %% 47 # get the remainder after dividing by 47
     one_fifty <- one_fifty %>%
       arrange(uL_in) %>%
       slice(1:(nrow(one_fifty) - x))
@@ -122,15 +122,15 @@ if (nrow(dig >=46)){
     rm(one_fifty)
   }
 }  
-if (nrow(dig >=46)){
+if (nrow(dig >=47)){
   two_hundred <- dig %>%
     mutate(uL_in = round(200/quant, 1)) %>% # round to 1 decimal point
     filter(uL_in < 22.2 & uL_in > 0.5) %>%
     mutate(water = round(22.2-uL_in, 1)) %>%
     mutate(DNA = 200)
   
-  if (nrow(two_hundred)/46 > 1){ # make sure there are at least 46
-    x <- nrow(two_hundred) %% 46 # get the remainder after dividing by 46
+  if (nrow(two_hundred)/47 > 1){ # make sure there are at least 47
+    x <- nrow(two_hundred) %% 47 # get the remainder after dividing by 47
     two_hundred <- two_hundred %>%
       arrange(uL_in) %>%
       slice(1:(nrow(two_hundred) - x))
