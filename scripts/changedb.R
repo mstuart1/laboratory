@@ -12,12 +12,12 @@ digs <- lab %>% dbReadTable("digest") %>% collect()
 # 
 # 
 change <- digs %>%
-  # filter(plate == "D4108-D4203") %>%
-  filter(digest_id >= "D3340" & digest_id < "D3724") %>% 
+  filter(date == "2015-12-01") %>% 
+  # filter(digest_id >= "D3340" & digest_id < "D3724") %>% 
   # filter(extraction_id >= "E4289") %>%
   # mutate(notes = "remaining fin clips don't fit into a set of 2 96 well plates, plan alternative") %>%
-  # mutate(plate = NA)
-  mutate(date = "2017-10-19", notes = NA)
+  mutate(plate = "D2487-D2510")
+  # mutate(date = "2017-10-19", notes = NA)
   # mutate(notes = NA)
 # 
 digs <- change_rows(digs, change, "digest_id")
