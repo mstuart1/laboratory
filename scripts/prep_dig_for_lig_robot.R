@@ -12,116 +12,147 @@ lig <- dbReadTable(lab, "ligation") %>%
 
 # get list of digested samples that have not been ligated
 dig <- dbReadTable(lab, "digest") %>% 
-  filter(!digest_id %in% lig$digest_id) %>%  # not digested yet
-  filter(quant >= 0.5) %>% # strong enough concentration to be digested 
+  # filter(!digest_id %in% lig$digest_id) %>%  # not ligated yet
+  filter(plate == "D3724-D3819") %>%  # want a specific plate
+  filter(extraction_id != "XXXX") %>% # remove blanks
+  # filter(quant >= 0.5) %>% # strong enough concentration to be ligated 
   select(digest_id, quant, well, plate) %>% # need the id, concentration, and where it is
   arrange(digest_id)
 
-# calculate how much dna can you ligate at 200ng - must be in groups of 48
-two_hundred <- dig %>% 
-  mutate(uL_in = round(200/quant, 1)) %>% # round to 1 decimal point
-  filter(uL_in < 22.2 & uL_in > 0.5) %>% 
-  mutate(water = round(22.2-uL_in, 1)) %>% 
-    mutate(DNA = 200)
-
-if (nrow(two_hundred)/48 > 1){ # make sure there are at least 48 
-  x <- nrow(two_hundred) %% 48 # get the remainder after dividing by 48
-  two_hundred <- two_hundred %>% 
-    arrange(uL_in) %>% 
-    slice(1:(nrow(two_hundred) - x))
-  dig <- anti_join(dig, two_hundred, by = "digest_id")
-}else {
-  rm(two_hundred)
-}
-
-
-one_fifty <- dig %>% 
-  mutate(uL_in = round(150/quant, 1)) %>% # round to 1 decimal point
-  filter(uL_in < 22.2 & uL_in > 0.5) %>% 
-  mutate(water = round(22.2-uL_in, 1)) %>% 
-  mutate(DNA = 150)
-
-if (nrow(one_fifty)/48 > 1){ # make sure there are at least 48 
-  x <- nrow(one_fifty) %% 48 # get the remainder after dividing by 48
-  one_fifty <- one_fifty %>% 
-    arrange(uL_in) %>% 
-    slice(1:(nrow(one_fifty) - x))
-  dig <- anti_join(dig, one_fifty, by = "digest_id")
-}else {
-  rm(one_fifty)
-}
-
-one_hundred <- dig %>% 
-  mutate(uL_in = round(100/quant, 1)) %>% # round to 1 decimal point
-  filter(uL_in < 22.2 & uL_in > 0.5) %>% 
-  mutate(water = round(22.2-uL_in, 1)) %>% 
-  mutate(DNA = 100)
-
-if (nrow(one_hundred)/48 > 1){ # make sure there are at least 48 
-  x <- nrow(one_hundred) %% 48 # get the remainder after dividing by 48
-  one_hundred <- one_hundred %>% 
-    arrange(uL_in) %>% 
-    slice(1:(nrow(one_hundred) - x))
-  dig <- anti_join(dig, one_hundred, by = "digest_id")
-}else {
-  rm(one_hundred)
-}
-
-fifty <- dig %>% 
-  mutate(uL_in = round(50/quant, 1)) %>% # round to 1 decimal point
-  filter(uL_in < 22.2 & uL_in > 0.5) %>% 
-  mutate(water = round(22.2-uL_in, 1)) %>% 
-  mutate(DNA = 50)
-
-if (nrow(fifty)/48 > 1){ # make sure there are at least 48 
-  x <- nrow(fifty) %% 48 # get the remainder after dividing by 48
-  fifty <- fifty %>% 
-    arrange(uL_in) %>% 
-    slice(1:(nrow(fifty) - x))
-  dig <- anti_join(dig, fifty, by = "digest_id")
-}else {
-  rm(fifty)
-}
-
-twenty_five <- dig %>% 
-  mutate(uL_in = round(25/quant, 1)) %>% # round to 1 decimal point
-  filter(uL_in < 22.2 & uL_in > 0.5) %>% 
-  mutate(water = round(22.2-uL_in, 1)) %>% 
-  mutate(DNA = 25)
-
-if (nrow(twenty_five)/48 > 1){ # make sure there are at least 48 
-  x <- nrow(twenty_five) %% 48 # get the remainder after dividing by 48
-  twenty_five <- twenty_five %>% 
-    arrange(uL_in) %>% 
-    slice(1:(nrow(twenty_five) - x))
-  dig <- anti_join(dig, twenty_five, by = "digest_id")
-}else {
-  rm(twenty_five)
-} 
-
+# TRYING A NEW STRATEGY TO LIGATE AT 10NG FIRST AND THEN UP THE QUANTITY ####
 ten <- dig %>% 
   mutate(uL_in = round(10/quant, 1)) %>% # round to 1 decimal point
   filter(uL_in < 22.2 & uL_in > 0.5) %>% 
   mutate(water = round(22.2-uL_in, 1)) %>% 
   mutate(DNA = 10)
 
-if (nrow(ten)/48 > 1){ # make sure there are at least 48 
-  x <- nrow(ten) %% 48 # get the remainder after dividing by 48
+if (nrow(ten)/46 > 1){ # if there are more than 46 (because we are regenotyping 2 per pool)
+  x <- nrow(ten) %% 46 # get the remainder after dividing by 46
   ten <- ten %>% 
     arrange(uL_in) %>% 
     slice(1:(nrow(ten) - x))
-  dig <- anti_join(dig, ten, by = "digest_id")
+  dig <- anti_join(dig, ten, by = "digest_id") # dig will hold whatever was not used
 }else {
-  rm(ten)
+  rm(ten) # remove the 10ng option if there aren't 46 samples that will work
 }
 
-rbind(
-  two_hundred, 
-  one_fifty, 
-  one_hundred, 
-  fifty, 
-  twenty_five, 
-  ten)
+if (nrow(dig >= 46)){
+  twenty_five <- dig %>%
+    mutate(uL_in = round(25/quant, 1)) %>% # round to 1 decimal point
+    filter(uL_in < 22.2 & uL_in > 0.5) %>%
+    mutate(water = round(22.2-uL_in, 1)) %>%
+    mutate(DNA = 25)
+
+  if (nrow(twenty_five)/46 > 1){ # if there are more than 46
+    x <- nrow(twenty_five) %% 46 # get the remainder after dividing by 46
+    twenty_five <- twenty_five %>%
+      arrange(uL_in) %>%
+      slice(1:(nrow(twenty_five) - x))
+    dig <- anti_join(dig, twenty_five, by = "digest_id")
+  }else {
+    rm(twenty_five)
+  }
+}
+if (nrow(dig >=46)){
+  fifty <- dig %>%
+    mutate(uL_in = round(50/quant, 1)) %>% # round to 1 decimal point
+    filter(uL_in < 22.2 & uL_in > 0.5) %>%
+    mutate(water = round(22.2-uL_in, 1)) %>%
+    mutate(DNA = 50)
+
+  if (nrow(fifty)/46 > 1){ # if there are more than 46
+    x <- nrow(fifty) %% 46 # get the remainder after dividing by 46
+    fifty <- fifty %>%
+      arrange(uL_in) %>%
+      slice(1:(nrow(fifty) - x))
+    dig <- anti_join(dig, fifty, by = "digest_id")
+  }else {
+    rm(fifty)
+  }
+}
+if (nrow(dig >=46)){
+  s75 <- dig %>%
+      mutate(uL_in = round(75/quant, 1)) %>% # round to 1 decimal point
+      filter(uL_in < 22.2 & uL_in > 0.5) %>%
+      mutate(water = round(22.2-uL_in, 1)) %>%
+      mutate(DNA = 75)
+  
+  if (nrow(s75)/46 > 1){ # if there are more than 46
+      x <- nrow(s75) %% 46 # get the remainder after dividing by 46
+      s75 <- s75 %>%
+        arrange(uL_in) %>%
+        slice(1:(nrow(s75) - x))
+      dig <- anti_join(dig, s75, by = "digest_id")
+    }else {
+      rm(s75)
+    }
+}
+
+if (nrow(dig >=46)){
+  one_hundred <- dig %>%
+    mutate(uL_in = round(100/quant, 1)) %>% # round to 1 decimal point
+    filter(uL_in < 22.2 & uL_in > 0.5) %>%
+    mutate(water = round(22.2-uL_in, 1)) %>%
+    mutate(DNA = 100)
+
+  if (nrow(one_hundred)/46 > 1){ # make sure there are at least 46
+    x <- nrow(one_hundred) %% 46 # get the remainder after dividing by 46
+    one_hundred <- one_hundred %>%
+      arrange(uL_in) %>%
+      slice(1:(nrow(one_hundred) - x))
+    dig <- anti_join(dig, one_hundred, by = "digest_id")
+  }else {
+    rm(one_hundred)
+  }
+}
+if (nrow(dig >=46)){
+  one_fifty <- dig %>%
+    mutate(uL_in = round(150/quant, 1)) %>% # round to 1 decimal point
+    filter(uL_in < 22.2 & uL_in > 0.5) %>%
+    mutate(water = round(22.2-uL_in, 1)) %>%
+    mutate(DNA = 150)
+
+  if (nrow(one_fifty)/46 > 1){ # make sure there are at least 46
+    x <- nrow(one_fifty) %% 46 # get the remainder after dividing by 46
+    one_fifty <- one_fifty %>%
+      arrange(uL_in) %>%
+      slice(1:(nrow(one_fifty) - x))
+    dig <- anti_join(dig, one_fifty, by = "digest_id")
+  }else {
+    rm(one_fifty)
+  }
+}  
+if (nrow(dig >=46)){
+  two_hundred <- dig %>%
+    mutate(uL_in = round(200/quant, 1)) %>% # round to 1 decimal point
+    filter(uL_in < 22.2 & uL_in > 0.5) %>%
+    mutate(water = round(22.2-uL_in, 1)) %>%
+    mutate(DNA = 200)
+  
+  if (nrow(two_hundred)/46 > 1){ # make sure there are at least 46
+    x <- nrow(two_hundred) %% 46 # get the remainder after dividing by 46
+    two_hundred <- two_hundred %>%
+      arrange(uL_in) %>%
+      slice(1:(nrow(two_hundred) - x))
+    dig <- anti_join(dig, two_hundred, by = "digest_id")
+  }else {
+    rm(two_hundred)
+  }
+}
+
+# which digests are left over?
+
+
+
+
+
+# rbind(
+#   two_hundred, 
+#   one_fifty, 
+#   one_hundred, 
+#   fifty, 
+#   twenty_five, 
+#   ten)
 
 
 
