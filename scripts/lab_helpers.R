@@ -171,6 +171,40 @@ remove_rows <- function(table_name, how_many_wells){
   
 }
 
+# lig_ng ####
+#' figure out how many ng to use in making pools for ligations
+#' @export
+#' @name lig_ng
+#' @author Michelle Stuart
+#' @param x = digest table
+#' @examples 
+#' ligs <- lig_ng(dig)
+lig_ng <- function(dig) {
+  out <- data.frame() # make a blank data frame to write to
+  y <- nrow(dig) # get the number of beginning rows
+  for(i in c(10, 25, 50, 75, 100, 150, 200)){
+    if (nrow(out) < y){
+      ng <- dig %>%
+        mutate(uL_in = round(i/quant, 1)) %>% # round to 1 decimal point
+        filter(uL_in < 22.2 & uL_in > 0.5) %>%
+        mutate(water = round(22.2-uL_in, 1)) %>%
+        mutate(DNA = i)
+      
+      if (nrow(ng)/47 >= 1){ # if there are more than 47
+        x <- nrow(ng) %% 47 # get the remainder after dividing by 47
+        ng <- ng %>%
+          arrange(desc(uL_in)) %>% # keep the largest pipet volumes
+          slice(1:(nrow(ng) - x))
+        out <- rbind(out, ng)
+        dig <- anti_join(dig, ng, by = "digest_id")
+      }else{
+        rm(ng)
+      }
+    }
+  }
+  return(out)
+}
+
 # make_plate ####
 #' make a plate from a list of sample_ids, extraction_ids, etc.
 #' @export
