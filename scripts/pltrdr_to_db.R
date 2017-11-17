@@ -5,15 +5,16 @@ library(stringr)
 source("scripts/lab_helpers.R")
 
 # what types of samples are these
-# table = "extraction"
-table = "digest"
+table = "extraction"
+# table = "digest"
 # table = "ligation"
 
 # which plate is it?
-range = "D3340-D3435"
+range = "E4195-E4288"
 
 # read in plate reader data for the first plate
-platefile1 = "data/2017-11-07-plate06.txt"
+platefile1 = "data/2017-10-09-plate12.txt"
+platefile2 = "data/2017-10-09-plate14.txt"
 # colsinplate1 = 2:12 # is this a full plate?
 
 # skip the lines before the data
@@ -71,8 +72,6 @@ dat <- change_rows(dat, change, "digest_id")
 # import the firsts #### 
 # this is for the first column of each plate that was put onto a separate plate to make room for the standards
 
-platefile2 = "data/2017-11-07-plate07.txt"
-
 strs <- readLines(platefile2, skipNul = T)
 linestoskip = (which(strs == "Group: Unknowns")) # the number of lines to skip
 
@@ -85,7 +84,7 @@ dat2 <- dat2[1:(which(dat2$Sample == "Group Summaries")-1), ]
 firsts <- dat %>% 
   filter(plate == range, is.na(quant)) %>% 
   mutate(well = str_replace(well, "1", "7")) %>% # replace the 1 with whatever column of the firsts plate
-  select(digest_id, well)
+  select(extraction_id, well)
 
 # read in names for the samples
 quant2 <- left_join(dat2, firsts, by = c("Wells" = "well"))
@@ -93,7 +92,7 @@ quant2 <- quant2 %>%
   ### THIS DEPENDS ON THE TYPE OF SAMPLE YOU ARE LOOKING AT extraction_id, digest_id, etc) ###
   select(contains("id"), AdjConc) %>% 
   rename(quant = AdjConc) %>% 
-  filter(!is.na(digest_id))
+  filter(!is.na(extraction_id))
 
 # import into database
 lab <- write_db("Laboratory")
@@ -118,3 +117,7 @@ dat <- change_rows(dat, change, "digest_id")
 # write the group back to the database
 # dbWriteTable(lab, table, dat, row.names = F, overwrite = T)
 # dbDisconnect(lab)
+
+# which samples are too low to digest with the regular concentration of enzyme?
+test <- dat %>% 
+  filter(quant < 40 & sample_id != "XXXX")
