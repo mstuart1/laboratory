@@ -12,125 +12,53 @@ lig <- dbReadTable(lab, "ligation") %>%
 
 # get list of digested samples that have not been ligated
 dig <- dbReadTable(lab, "digest") %>% 
-  # filter(!digest_id %in% lig$digest_id) %>%  # not ligated yet
-  filter(plate == "D3724-D3819") %>%  # want a specific plate
+  filter(digest_id >= "D3340" & digest_id <= "D4587") %>% 
+  # filter(!digest_id %in% lig$digest_id) %>%  # any digests not ligated yet
+  # filter(plate == "D3628-D3723") %>%  # want a specific plate
   filter(extraction_id != "XXXX") %>% # remove blanks
+  # filter(!is.na(quant)) %>% # candidates have all been quantified
+  # filter(!is.na(plate)) %>% # candidates are in plates
   # filter(quant >= 0.5) %>% # strong enough concentration to be ligated 
   select(digest_id, quant, well, plate) %>% # need the id, concentration, and where it is
   arrange(digest_id)
 
 # TRYING A NEW STRATEGY TO LIGATE AT 10NG FIRST AND THEN UP THE QUANTITY ####
-DNA <- 10
-ten <- lig_ng(dig, DNA)
+# debugonce(lig_ng)
+out <- lig_ng(dig)
 
+# are any digests left over? # should return TRUE
+nrow(out) == nrow(dig)
+# what is left over
+left <- anti_join(dig, out, by = "digest_id")
 
-if (nrow(dig >=47)){
-  fifty <- dig %>%
-    mutate(uL_in = round(50/quant, 1)) %>% # round to 1 decimal point
-    filter(uL_in < 22.2 & uL_in > 0.5) %>%
-    mutate(water = round(22.2-uL_in, 1)) %>%
-    mutate(DNA = 50)
+# define regenotype samples - these should be samples that passed dDocent and haven't been regenotyped
+regeno <- readRDS("data/passed_ligs.Rdata")
 
-  if (nrow(fifty)/47 >= 1){ # if there are more than 47
-    x <- nrow(fifty) %% 47 # get the remainder after dividing by 47
-    fifty <- fifty %>%
-      arrange(desc(uL_in)) %>% # keep the largest pipet volumes
-      slice(1:(nrow(fifty) - x))
-    dig <- anti_join(dig, fifty, by = "digest_id")
-  }else {
-    rm(fifty)
-  }
-}
-if (nrow(dig >=47)){
-  s75 <- dig %>%
-      mutate(uL_in = round(75/quant, 1)) %>% # round to 1 decimal point
-      filter(uL_in < 22.2 & uL_in > 0.5) %>%
-      mutate(water = round(22.2-uL_in, 1)) %>%
-      mutate(DNA = 75)
+# OPEN WORK HISTORY SCRIPT to find sample info ####
+# which samples are only represented once?
+once <- info %>% 
+  group_by(sample_id) %>% 
+  summarise(num_geno = n()) %>% 
+  filter(num_geno == 1)
+
+candidates <- info %>% 
+  filter(sample_id == once$sample_id[3] | sample_id == once$sample_id[4])
+
+# need to redigest the candidates before this information can be filled in
+# current candidates are E1687 and E1688 - one has to ligate at 10ng and one at 50
   
-  if (nrow(s75)/47 >= 1){ # if there are more than 47
-      x <- nrow(s75) %% 47 # get the remainder after dividing by 47
-      s75 <- s75 %>%
-        arrange(desc(uL_in)) %>% # keep the largest pipet volumes
-        slice(1:(nrow(s75) - x))
-      dig <- anti_join(dig, s75, by = "digest_id")
-    }else {
-      rm(s75)
-    }
-}
-
-if (nrow(dig >=47)){
-  one_hundred <- dig %>%
-    mutate(uL_in = round(100/quant, 1)) %>% # round to 1 decimal point
-    filter(uL_in < 22.2 & uL_in > 0.5) %>%
-    mutate(water = round(22.2-uL_in, 1)) %>%
-    mutate(DNA = 100)
-
-  if (nrow(one_hundred)/47 >= 1){ # make sure there are at least 47
-    x <- nrow(one_hundred) %% 47 # get the remainder after dividing by 47
-    one_hundred <- one_hundred %>%
-      arrange(desc(uL_in)) %>% # keep the largest pipet volumes
-      slice(1:(nrow(one_hundred) - x))
-    dig <- anti_join(dig, one_hundred, by = "digest_id")
-  }else {
-    rm(one_hundred)
-  }
-}
-if (nrow(dig >=47)){
-  one_fifty <- dig %>%
-    mutate(uL_in = round(150/quant, 1)) %>% # round to 1 decimal point
-    filter(uL_in < 22.2 & uL_in > 0.5) %>%
-    mutate(water = round(22.2-uL_in, 1)) %>%
-    mutate(DNA = 150)
-
-  if (nrow(one_fifty)/47 >= 1){ # make sure there are at least 47
-    x <- nrow(one_fifty) %% 47 # get the remainder after dividing by 47
-    one_fifty <- one_fifty %>%
-      arrange(desc(uL_in)) %>% # keep the largest pipet volumes
-      slice(1:(nrow(one_fifty) - x))
-    dig <- anti_join(dig, one_fifty, by = "digest_id")
-  }else {
-    rm(one_fifty)
-  }
-}  
-if (nrow(dig >=47)){
-  two_hundred <- dig %>%
-    mutate(uL_in = round(200/quant, 1)) %>% # round to 1 decimal point
-    filter(uL_in < 22.2 & uL_in > 0.5) %>%
-    mutate(water = round(22.2-uL_in, 1)) %>%
-    mutate(DNA = 200)
-  
-  if (nrow(two_hundred)/47 >= 1){ # make sure there are at least 47
-    x <- nrow(two_hundred) %% 47 # get the remainder after dividing by 47
-    two_hundred <- two_hundred %>%
-      arrange(desc(uL_in)) %>% # keep the largest pipet volumes
-      slice(1:(nrow(two_hundred) - x))
-    dig <- anti_join(dig, two_hundred, by = "digest_id")
-  }else {
-    rm(two_hundred)
-  }
-}
-
-# which digests are left over?
+out[95, ] <- c("digest_id", "quant", "well", "plate", "uL_in", "water", "DNA")
+out[96, ] <- c("digest_id", "quant", "well", "plate", "uL_in", "water", "DNA")
 
 
+# # how many plates would these make, 94 samples plus 2 blanks per plate
+# (nplates <- floor(nrow(dig)/96)) # extra parenthesis are to print
 
+# # define wells
+# well <- 1:(96*nplates)
 
-
-
-
-
-
-
-
-# how many plates would these make, 94 samples plus 2 blanks per plate
-(nplates <- floor(nrow(dig)/96)) # extra parenthesis are to print
-
-# define wells
-well <- 1:(96*nplates)
-
-# how many samples are not included in this plan?
-(not <- nrow(extr) - (96*nplates))
+# # how many samples are not included in this plan?
+# (not <- nrow(extr) - (96*nplates))
 
 # separate list of samples out into plates
 
