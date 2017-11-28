@@ -308,9 +308,80 @@ assign_mek_loc <- function(plate_names, table, dest_or_source, identifier){
   
 }
 
+# samp_from_lig ####
+#' find sample id from ligation id
+#' @export
+#' @name samp_from_lig
+#' @author Michelle Stuart
+#' @param x = table_name where ligation ids are located
+#' @examples 
+#' c5 <- samp_from_lig(genedf)
 
+
+samp_from_lig <- function(table_name){
   
+  lab <- read_db("Laboratory")
+  
+  # connect ligation ids to digest ids
+  lig <- lab %>% 
+    tbl("ligation") %>% 
+    collect() %>% 
+    filter(ligation_id %in% table_name$ligation_id) %>% 
+    select(ligation_id, digest_id)
+  
+  # connect digest ids to extraction ids
+  dig <- lab %>% 
+    tbl("digest") %>% 
+    collect() %>% 
+    filter(digest_id %in% lig$digest_id) %>% 
+    select(extraction_id, digest_id)
+  
+  extr <- lab %>% 
+    tbl("extraction") %>% 
+    collect() %>% 
+    filter(extraction_id %in% dig$extraction_id) %>% 
+    select(extraction_id, sample_id)
+  
+  mid <- left_join(lig, dig, by = "digest_id")
+  samp <- left_join(extr, mid, by = "extraction_id") %>% 
+    select(sample_id, ligation_id)
+  
+  return(samp)
+}
 
+# heatmap ####
+#' plot a plate map with color
+#' @export
+#' @name heatmap
+#' @author Michelle Stuart
+#' @param x = table_name where ids are located
+#' @param y = identifier
+#' @examples 
+#' sample_map <- heatmap(plate_as_long_table)
+
+heatmap <- function(plate_as_long_table, id){
+  map <- map %>% 
+    select(row, col, pass, id, filter) %>% 
+    mutate(row = factor(row, levels = c("H", "G", "F", "E", "D", "C", "B", "A")), 
+           col = factor(col, levels = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)))
+  
+  plateheatmap <- ggplot(map, aes(x=col, y=row, fill= filter)) + 
+    geom_tile()
+  
+  plateheatmap + 
+    geom_text(aes(col, row, label = ligation_id), color = "black", size = 4) +
+    theme(
+      axis.title.x = element_blank(),
+      axis.title.y = element_blank(),
+      panel.grid.major = element_blank(),
+      panel.border = element_blank(),
+      panel.background = element_blank(),
+      axis.ticks = element_blank())
+  
+  ggsave(paste("plots/", filter, Sys.Date(), ".pdf", sep = ""))
+  
+}
+ 
   
 
 
