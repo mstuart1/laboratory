@@ -28,8 +28,8 @@ out <- lig_ng(dig)
 
 # are any digests left over? # should return TRUE
 nrow(out) == nrow(dig)
-# what is left over
-left <- anti_join(dig, out, by = "digest_id")
+# what is left over - quantities that don't fit into a pool
+# left <- anti_join(dig, out, by = "digest_id")
 
 # define regenotype samples - these should be samples that passed dDocent and haven't been regenotyped
 regeno <- readRDS("data/passed_ligs.Rdata")
