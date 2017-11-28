@@ -1,6 +1,7 @@
 # analyze the read data
 
 source("scripts/lab_helpers.R")
+library(ggplot2)
 
 lab <- read_db("Laboratory")
 lig <- lab %>% 
@@ -26,3 +27,25 @@ low_tot <- lig %>% filter(total_reads < 20000)
 
 # These samples need to be evaluated to see if they have been genotyped in the past or if they need to be regenotyped
 # write.csv(low_tot, file = "data/low_performers.csv", row.names = F)
+
+# plot ng used vs. num_loci passed dDocent - need genepop
+num_loci <- readRDS("data/num_loci.Rdata")
+
+dat <- left_join(lig, num_loci, by = "ligation_id")
+dat <- dat %>% 
+  select(ligation_id, sample_id, DNA, numloci, total_reads, retained, percent_retained) %>% 
+  mutate(numloci = ifelse(is.na(numloci), 0, numloci))
+
+ggplot(dat)+
+  geom_point(mapping = aes(x=DNA, y=numloci)) # not very helpful
+
+ggplot(dat, mapping = aes(x = DNA, y = numloci)) +
+  geom_violin()
+
+ggplot(dat, mapping = aes(group = DNA, x = DNA, y = numloci)) +
+  geom_boxplot()
+
+dat2 <- dat %>% 
+  group_by(DNA)
+
+saveRDS(dat, file = "data/plot_data.Rdata")
