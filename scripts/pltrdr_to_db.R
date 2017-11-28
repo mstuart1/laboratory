@@ -5,16 +5,17 @@ library(stringr)
 source("scripts/lab_helpers.R")
 
 # what types of samples are these
-table = "extraction"
-# table = "digest"
+# table = "extraction"
+table = "digest"
 # table = "ligation"
 
 # which plate is it?
-range = "E4195-E4288"
+range = c("D3916-D4011", "D4012-D4107", "D4108-D4203", "D4204-D4299", "D4300-D4395", "D4396-D4491", "D4492-D4587")
 
+for (i in 3:length(range)){
 # read in plate reader data for the first plate
-platefile1 = "data/2017-10-09-plate12.txt"
-platefile2 = "data/2017-10-09-plate14.txt"
+platefile1 = paste("data/2017-11-27-plate", i, ".txt", sep = "")
+platefile2 = paste("data/2017-11-27-plate", length(range)+1, ".txt", sep = "")
 # colsinplate1 = 2:12 # is this a full plate?
 
 # skip the lines before the data
@@ -36,7 +37,7 @@ dat <- dbReadTable(lab, table)
 # select your desired plate
 plate <- dat %>% 
   select(contains("id"), well, plate) %>% 
-  filter(plate == range) %>% 
+  filter(plate == range[i]) %>% 
   collect()
 
 
@@ -56,8 +57,8 @@ quant1 <- quant1 %>%
 
 # select the samples that will be changed
 change <- dat %>%
-  filter(plate == range) %>% 
-  select(-quant)
+  filter(plate == range[i]) %>% 
+  select(-quant) # don't bring in the quant column, will add that here
 
 # add in the new quants
 change <- left_join(change, quant1, by = c("digest_id", "extraction_id"))
@@ -65,7 +66,7 @@ change <- left_join(change, quant1, by = c("digest_id", "extraction_id"))
 dat <- change_rows(dat, change, "digest_id")
 
 # write the group back to the database
-# dbWriteTable(lab, table, dat, row.names = F, overwrite = T)
+dbWriteTable(lab, table, dat, row.names = F, overwrite = T)
 # dbDisconnect(lab)
 
 
@@ -80,11 +81,14 @@ dat2 <- read.table(text = strs,  skip = linestoskip, sep = "\t", fill = T, heade
 # remove footer rows
 dat2 <- dat2[1:(which(dat2$Sample == "Group Summaries")-1), ]
 
+x <- as.character(i+1)
+
 # pull first column samples from database
 firsts <- dat %>% 
-  filter(plate == range, is.na(quant)) %>% 
-  mutate(well = str_replace(well, "1", "7")) %>% # replace the 1 with whatever column of the firsts plate
-  select(extraction_id, well)
+  filter(plate == range[i], is.na(quant)) %>% 
+  mutate(well = str_replace(well, "1", x)) %>% # replace the 1 with whatever column of the firsts plate
+  # select(extraction_id, well)
+  select(digest_id, well)
 
 # read in names for the samples
 quant2 <- left_join(dat2, firsts, by = c("Wells" = "well"))
@@ -92,7 +96,8 @@ quant2 <- quant2 %>%
   ### THIS DEPENDS ON THE TYPE OF SAMPLE YOU ARE LOOKING AT extraction_id, digest_id, etc) ###
   select(contains("id"), AdjConc) %>% 
   rename(quant = AdjConc) %>% 
-  filter(!is.na(extraction_id))
+  # filter(!is.na(extraction_id))
+  filter(!is.na(digest_id))
 
 # import into database
 lab <- write_db("Laboratory")
@@ -108,16 +113,18 @@ change <- left_join(change, quant2, by = "digest_id")
 
 dat <- change_rows(dat, change, "digest_id")
 
+# update final volume of samples
 change <- dat %>%
-  filter(plate == range) %>% 
+  filter(plate == range[i]) %>% 
   mutate(final_vol = 40)
 
 dat <- change_rows(dat, change, "digest_id")
 
 # write the group back to the database
-# dbWriteTable(lab, table, dat, row.names = F, overwrite = T)
+dbWriteTable(lab, table, dat, row.names = F, overwrite = T)
 # dbDisconnect(lab)
+}
 
-# which samples are too low to digest with the regular concentration of enzyme?
-test <- dat %>% 
-  filter(quant < 40 & sample_id != "XXXX")
+# # which samples are too low to digest with the regular concentration of enzyme?
+# test <- dat %>% 
+#   filter(quant < 40 & sample_id != "XXXX")
