@@ -5,6 +5,7 @@ lab <- write_db("Laboratory")
 
 # THIS DEPENDS ON WHICH TABLE YOU WANT TO WORK WITH 
 
+# for this iteration I'm going to adjust the volume of sample added and the quant
 # #for this iteration this script, I am going to change the notes on a group of digests
 # 
 # # pull in all table
@@ -12,11 +13,14 @@ digs <- lab %>% dbReadTable("digest") %>% collect()
 # 
 # 
 change <- digs %>%
-  filter(date == "2015-12-01") %>% 
+  filter(extraction_id %in% c("E4132", "E4139", "E4152", "E4157", "E4162", "E1463", "E4164", "E4168", "E4172")) %>% 
+    mutate(vol_in = 15, 
+          ng_in = ng_in/2)
+  # filter(date == "2015-12-01") %>% 
   # filter(digest_id >= "D3340" & digest_id < "D3724") %>% 
   # filter(extraction_id >= "E4289") %>%
   # mutate(notes = "remaining fin clips don't fit into a set of 2 96 well plates, plan alternative") %>%
-  mutate(plate = "D2487-D2510")
+  # mutate(plate = "D2487-D2510")
   # mutate(date = "2017-10-19", notes = NA)
   # mutate(notes = NA)
 # 
@@ -24,10 +28,10 @@ digs <- change_rows(digs, change, "digest_id")
 
 # write the changes to the db
 ################### BE CAREFUL ########################################
-dbWriteTable(lab, "digest", digs, row.names = F, overwrite = T)
-
-dbDisconnect(lab)
-rm(lab)
+# dbWriteTable(lab, "digest", digs, row.names = F, overwrite = T)
+# 
+# dbDisconnect(lab)
+# rm(lab)
 
 
 # # #for this iteration this script, I am going to change the notes on a group of extractions
@@ -59,47 +63,47 @@ rm(lab)
 # # # dbDisconnect(lab)
 # # # rm(lab)
 
+# 
+# # add one column of quants into database
+# platefile2 = "data/2017-11-07-plate07.txt"
+# 
+# strs <- readLines(platefile2, skipNul = T)
+# linestoskip = (which(strs == "Group: Unknowns")) # the number of lines to skip
+# 
+# dat2 <- read.table(text = strs,  skip = linestoskip, sep = "\t", fill = T, header = T, stringsAsFactors = F)
+# 
+# # remove footer rows
+# dat2 <- dat2[1:(which(dat2$Sample == "Group Summaries")-1), ]
+# dat2 <- select(dat2, Wells, AdjConc) %>% 
+#   rename(quant = AdjConc) %>% 
+# #   rename(well = Wells)
+# 
+# # pull first column samples from database
+# change <- dbReadTable(lab, "extraction") %>%
+#   filter(grepl("E3819", plate), grepl("6", well)) %>% 
+#   mutate(well = str_replace(well, "6", "8")) %>% 
+#   select(-quant)
+# 
+# # read in names for the samples
+# quant2 <- left_join(dat2, change, by = "well")
+# quant2 <- quant2 %>%
+#   ### THIS DEPENDS ON THE TYPE OF SAMPLE YOU ARE LOOKING AT extraction_id, digest_id, etc) ###
+#   filter(!is.na(extraction_id)) %>% 
+#   select(extraction_id, quant)
 
-# add one column of quants into database
-platefile2 = "data/2017-11-07-plate07.txt"
-
-strs <- readLines(platefile2, skipNul = T)
-linestoskip = (which(strs == "Group: Unknowns")) # the number of lines to skip
-
-dat2 <- read.table(text = strs,  skip = linestoskip, sep = "\t", fill = T, header = T, stringsAsFactors = F)
-
-# remove footer rows
-dat2 <- dat2[1:(which(dat2$Sample == "Group Summaries")-1), ]
-dat2 <- select(dat2, Wells, AdjConc) %>% 
-  rename(quant = AdjConc) %>% 
-  rename(well = Wells)
-
-# pull first column samples from database
-change <- dbReadTable(lab, "extraction") %>%
-  filter(grepl("E3819", plate), grepl("6", well)) %>% 
-  mutate(well = str_replace(well, "6", "8")) %>% 
-  select(-quant)
-
-# read in names for the samples
-quant2 <- left_join(dat2, change, by = "well")
-quant2 <- quant2 %>%
-  ### THIS DEPENDS ON THE TYPE OF SAMPLE YOU ARE LOOKING AT extraction_id, digest_id, etc) ###
-  filter(!is.na(extraction_id)) %>% 
-  select(extraction_id, quant)
-
-table = "extraction"
-# import into database
-lab <- write_db("Laboratory")
-dat <- dbReadTable(lab, table)
-
-# select the samples that will be changed
-change <- dat %>% 
-  filter(extraction_id %in% quant2$extraction_id) %>% 
-  select(-quant)
-
-change <- left_join(change, quant2, by = "extraction_id")
-
-dat <- change_rows(dat, change, "extraction_id")
+# table = "extraction"
+# # import into database
+# lab <- write_db("Laboratory")
+# dat <- dbReadTable(lab, table)
+# 
+# # select the samples that will be changed
+# change <- dat %>% 
+#   filter(extraction_id %in% quant2$extraction_id) %>% 
+#   select(-quant)
+# 
+# change <- left_join(change, quant2, by = "extraction_id")
+# 
+# dat <- change_rows(dat, change, "extraction_id")
 
 # write the group back to the database
 # dbWriteTable(lab, table, dat, row.names = F, overwrite = T)
