@@ -12,8 +12,16 @@ table = "digest"
 # which plate is it?
 range = c("D3916-D4011", "D4012-D4107", "D4108-D4203", "D4204-D4299", "D4300-D4395", "D4396-D4491", "D4492-D4587")
 
-for (i in 3:length(range)){
+# # special ####
+# # read in the plate reader locations
+# reader <- read.csv("data/blank_plate.csv") %>% 
+#   rename(digest_id = X) %>% 
+#   filter(grepl("D", digest_id)) %>% 
+#   mutate(well = paste(Row, Col, sep = ""))
+
+# for (i in 3:length(range)){
 # read in plate reader data for the first plate
+# platefile1 = "data/2017-12-04-plate1.txt"
 platefile1 = paste("data/2017-11-27-plate", i, ".txt", sep = "")
 platefile2 = paste("data/2017-11-27-plate", length(range)+1, ".txt", sep = "")
 # colsinplate1 = 2:12 # is this a full plate?
@@ -31,31 +39,49 @@ dat1 <- dat1[1:(which(dat1$Sample == "Group Summaries")-1), ]
 # read in names for the samples
 lab <- write_db("Laboratory")
 
-# all of the data in the db for this table
+# all of the data in the db for this table (for example, "digest")
 dat <- dbReadTable(lab, table)
 
 # select your desired plate
-plate <- dat %>% 
-  select(contains("id"), well, plate) %>% 
-  filter(plate == range[i]) %>% 
+plate <- dat %>%
+  select(contains("id"), well, plate) %>%
+  filter(plate == range[i]) %>%
   collect()
 
-
+# special ####
+# quant1 <- left_join(dat1, reader, by = c("Wells" = "well"))
 quant1 <- dplyr::left_join(dat1, plate, by = c("Wells" = "well"))
-quant1 <- quant1 %>% 
+quant1 <- quant1 %>%
   select(contains("id"), AdjConc)
 
 # remove any empty wells and rename the column
 quant1 <- quant1 %>%
 #   filter(!is.na(1)) %>% 
   rename(quant = AdjConc)
-# 
+ 
 ############### add this information to the database ##################
 # BE CAREFUL #
 
 # the entire table was pulled in as dat above
 
 # select the samples that will be changed
+# special
+# quant1 <- quant1 %>% 
+#   select(digest_id, AdjConc) %>% 
+#   rename(quant = AdjConc)
+# change <- dat %>%
+#   filter(digest_id %in% reader$digest_id)
+# # do any have notes?
+# test <- change %>% 
+#   filter(!is.na(notes))
+# change <- change %>% 
+#   rename(old_quant = quant)
+# change <- left_join(change, quant1, by = "digest_id")
+# change <- change %>% 
+#   mutate(notes = ifelse(is.na(old_quant), notes, paste("Requantified on 12-04-2017, original quant was ", old_quant, sep = "")))
+# change <- change %>% select(-old_quant)
+
+
 change <- dat %>%
   filter(plate == range[i]) %>% 
   select(-quant) # don't bring in the quant column, will add that here
@@ -66,7 +92,7 @@ change <- left_join(change, quant1, by = c("digest_id", "extraction_id"))
 dat <- change_rows(dat, change, "digest_id")
 
 # write the group back to the database
-dbWriteTable(lab, table, dat, row.names = F, overwrite = T)
+# dbWriteTable(lab, table, dat, row.names = F, overwrite = T)
 # dbDisconnect(lab)
 
 
@@ -121,7 +147,7 @@ change <- dat %>%
 dat <- change_rows(dat, change, "digest_id")
 
 # write the group back to the database
-dbWriteTable(lab, table, dat, row.names = F, overwrite = T)
+# dbWriteTable(lab, table, dat, row.names = F, overwrite = T)
 # dbDisconnect(lab)
 }
 
