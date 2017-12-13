@@ -2,8 +2,10 @@
 
 source("scripts/lab_helpers.R")
 
+item <- c("L2657", "L2691")
+# item <- "L2620"
 # item <- regeno
-item <- c("L0304","L0305","L0306","L0308","L0309","L0310","L0313","L0332")
+# item <- c("L0304","L0305","L0306","L0308","L0309","L0310","L0313","L0332")
 
 lab <- read_db("Laboratory")
 
@@ -32,7 +34,8 @@ if (grepl("E", item)){
   
   temp <- lab %>% 
     tbl("ligation") %>% 
-    filter(digest_id %in% info$digest_id) %>% 
+    # filter(digest_id %in% info$digest_id) %>% 
+    filter(digest_id == info$digest_id) %>%
     collect() %>% 
     select(-contains("corr"), -vol_in, -regeno, -water) %>% 
     rename(lig_date = date,
@@ -139,7 +142,8 @@ if (grepl("L", item)){
   
   temp <- lab %>% 
     tbl("digest") %>% 
-    filter(digest_id %in% info$digest_id) %>% 
+    filter(digest_id %in% info$digest_id) %>%
+    # filter(digest_id == info$digest_id) %>%
     collect() %>% 
     select(-contains("corr"), -contains("vol"), -ng_in) %>% 
     rename(dig_date = date,
@@ -151,7 +155,8 @@ if (grepl("L", item)){
  
   temp <- lab %>% 
     tbl("extraction") %>% 
-    filter(extraction_id %in% info$extraction_id) %>% 
+    # filter(extraction_id %in% info$extraction_id) %>% 
+    filter(extraction_id == info$extraction_id) %>% 
     collect() %>%
     select(-final_vol, -contains("corr")) %>% 
     rename(extr_date = date, 
@@ -161,6 +166,7 @@ if (grepl("L", item)){
            extr_notes = notes)
   
   info <- left_join(info, temp, by = "extraction_id")
+  info <- select(info, pool, ligation_id, digest_id, extraction_id, everything())
   
 }
 
