@@ -179,26 +179,36 @@ remove_rows <- function(table_name, how_many_wells){
 #' @param x = digest table
 #' @examples 
 #' ligs <- lig_ng(dig)
-lig_ng <- function(dig) {
+lig_ng <- function(dig, regeno) {
   out <- data.frame() # make a blank data frame to write to
   y <- nrow(dig) # get the number of beginning rows
-  for(i in c(10, 25, 50, 75, 100, 150, 200)){
-    if (nrow(out) < y){
+  for(i in c(50, 75, 100, 150, 200)){
+    if (nrow(out) < y){ # if we haven't placed all of the candidates yet
+      # define the samples that can be ligated at the current ng
       ng <- dig %>%
         mutate(uL_in = round(i/quant, 1)) %>% # round to 1 decimal point
         filter(uL_in < 22.2 & uL_in > 0.5) %>%
-        mutate(water = round(22.2-uL_in, 1)) %>%
-        mutate(DNA = i)
-      
-      if (nrow(ng)/47 >= 1){ # if there are more than 47
-        x <- nrow(ng) %% 47 # get the remainder after dividing by 47
-        ng <- ng %>%
-          arrange(desc(uL_in)) %>% # keep the largest pipet volumes
-          slice(1:(nrow(ng) - x))
-        out <- rbind(out, ng)
+        mutate(water = round(22.2-uL_in, 1), 
+          DNA = i)
+      # define regenos that can be licated at the current ng
+      reg <- regeno %>%
+        mutate(uL_in = round(i/quant, 1)) %>% # round to 1 decimal point
+        filter(uL_in < 22.2 & uL_in > 0.5) %>%
+        mutate(water = round(22.2-uL_in, 1), 
+          DNA = i)
+      # pull out  pools
+      while (nrow(ng) >= 47){
+        while(nrow(reg) >= 1){
+        pool <- ng %>% 
+          slice(1:47)
+        re <- reg %>%
+          slice(1)
+        ng <- anti_join(ng, pool, by ="digest_id")
+        reg <- anti_join(reg, re, by = "digest_id")
+        out <- rbind(out, pool, re)
         dig <- anti_join(dig, ng, by = "digest_id")
-      }else{
-        rm(ng)
+        regeno <- anti_join(regeno, ng, by = "digest_id")
+      }
       }
     }
   }
