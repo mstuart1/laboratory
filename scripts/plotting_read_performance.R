@@ -49,3 +49,13 @@ dat2 <- dat %>%
   group_by(DNA)
 
 saveRDS(dat, file = "data/plot_data.Rdata")
+
+ggplot(dat, aes(x=DNA, y=numloci))+ 
+geom_point() + 
+geom_smooth(color="red")
+
+
+tab <- as.matrix(table(dat$DNA, dat$numloci>800))
+rs <- rowSums(tab)
+tab/rs
+plot(as.numeric(rownames(tab)), (tab/rs)[,2])
