@@ -6,18 +6,28 @@ source("scripts/lab_helpers.R")
 lab <- read_db("Laboratory")
 
 # which type of plate are you reading, extraction or digest?
-x <- "extraction"
+# x <- "extraction"
+x <- "digest"
 
 # which plates need to be read?
 work <- lab %>% 
   tbl(x) %>% 
-  filter(is.na(quant)) %>% # if you want any unquantified plates
+  filter(digest_id >= "D4588") %>% 
+  # filter(is.na(quant)) %>% # if you want any unquantified plates
   # filter(plate == "E3161-E3254" | plate == "E3255-E3348" | plate == "E3349-E3442" | plate == "E3443-E3536") %>%  # if you want to specify plates
-  filter(!is.na(plate)) %>% # eliminate any plates that haven't been extracted yet
+  # filter(!is.na(plate)) %>% # eliminate any plates that haven't been extracted yet
   collect() %>% 
-  arrange(plate, well) %>% 
-  select(1:2, well, plate) # the first 2 columns of any table are the id columns
+  mutate(row = factor(substr(well, 1, 1), levels = c("A", "B", "C", "D", "E", "F", "G", "H")), 
+         col = factor(substr(well, 2, 3), levels = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12))) %>% 
+  arrange(plate, col, row) %>% 
+  select(contains("id"), well, plate) # the first 2 columns of any table are the id columns
 
+# how many plates will be read?
+num_plate <- nrow(work)/96
+
+if (num_plate >= 12){
+  
+}
 # move the twelfth plate to it's own table - its firsts will not fit with the others
 twelve <- work %>% 
   filter(plate == "E4195-E4288")
