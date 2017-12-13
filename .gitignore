@@ -6,3 +6,5 @@
 maps
 output
 plots
+data
+.gitignore
