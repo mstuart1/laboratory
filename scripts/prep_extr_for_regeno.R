@@ -43,7 +43,7 @@ src <- extr %>%
   arrange(plate)
 
 # for all of the plates listed in the src table
-for (i in 1:nrow(src)){ 
+for (i in seq(nrow(src))){ 
   # find the extracts in one plate
   temp <- extr %>%
     filter(plate == src$plate[i])
@@ -112,7 +112,7 @@ source <- dbReadTable(lab, "extraction") %>%
   filter(plate %in% extr_plates$plate)
 
 # iterate through the list of plates and make plate maps with highlighted cells to pull extract from 
-for(i in 1:nrow(extr_plates)){
+for(i in seq(nrow(extr_plates))){
   temp <- source %>%
     filter(plate == extr_plates$plate[i])
   plate <- plate_from_db(temp, "extraction_id") # this will give an error if you try to do more than one plate at once
