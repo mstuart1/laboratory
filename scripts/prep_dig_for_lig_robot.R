@@ -47,7 +47,7 @@ for(i in c(50, 75, 100, 150, 200)){
         DNA = i) %>% 
       arrange(quant)
     # pull out  pools
-      for (j in 1:nrow(reg)){
+      for (j in seq(nrow(reg))){
         if(nrow(ng) >=47){
         pool <- ng %>% 
           slice(1:47) %>% 
@@ -116,7 +116,7 @@ plate <- data_frame()
 # define wells
 well <- data.frame("well" = 1:(96*nplates))
 
-for (i in 1:nplates){
+for (i in seq(nplates)){
   pool1 <- out %>% 
     filter(pool == pool_list$pool[1]) %>% 
     select(digest_id)
@@ -158,7 +158,7 @@ ligations <- left_join(plate, out, by = "digest_id") %>%
 plate_list <- distinct(ligations, round)
 
 # for each round, define which source plates are present and assign source locations
-for (i in 1:nrow(plate_list)){
+for (i in seq(nrow(plate_list))){
   # narrow the info down to only the round in question
   dest_plate <- ligations %>% filter(round == plate_list$round[i])
   # which plates are source plates
@@ -167,7 +167,7 @@ for (i in 1:nrow(plate_list)){
   #P8 is tips, P11 is water, P12 is destination
   positions <- c("P5", "P6", "P7", "P9", "P10") 
   #assign sources to positions
-  for (j in 1:nrow(sources)){
+  for (j in seq(nrow(sources))){
     ligations <- ligations %>% 
       mutate(source_loc = ifelse(source_plate == sources$source_plate[j], 
         positions[1], source_loc))
