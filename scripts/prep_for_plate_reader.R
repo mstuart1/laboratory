@@ -60,7 +60,7 @@ plates <- work %>%
 
 # create plates from this db info
 
-for (i in 1:nrow(plates)){ # can't have more than 11 columns of samples on a firsts plate
+for (i in seq(nrow(plates))){ # can't have more than 11 columns of samples on a firsts plate
   # filter down to one plate
   x <- plates$plate[i]
   current <- work %>% 
