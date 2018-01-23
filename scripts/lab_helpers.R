@@ -391,8 +391,47 @@ heatmap <- function(plate_as_long_table, id){
   ggsave(paste("plots/", filter, Sys.Date(), ".pdf", sep = ""))
   
 }
+
+# work_history ####
+#' get the work history for samples
+#' @export
+#' @name work_history
+#' @author Michelle Stuart
+#' @param x = table_where_ids_are
+#' @param y = column_of_ids - must be sample_id, extraction_id, digest_id, or ligation_id
+#' @examples 
+#' history <- work_history(table,column)
  
-  
+# check the work history of those sample_ids
+work_history <- function(table, id_column){
+  library(dplyr)
+  lab <- read_db("Laboratory")
+  if(column == "sample_id"){
+    hist <- lab %>% 
+      tbl("extraction") %>% 
+      filter(sample_id %in% table$sample_id) %>% 
+      select(sample_id, extraction_id) %>% 
+      collect()
+    
+    dig <- lab %>% 
+      tbl("digest") %>% 
+      filter(extraction_id %in% hist$extraction_id) %>% 
+      select(extraction_id, digest_id) %>% 
+      collect()
+    hist <- left_join(hist, dig, by = "extraction_id")
+    rm(dig)
+    
+    lig <- lab %>% 
+      tbl("ligation") %>% 
+      filter(digest_id %in% hist$digest_id) %>% 
+      select(ligation_id, digest_id) %>% 
+      collect()
+    hist <- left_join(hist, lig, by = "digest_id")
+    rm(lig)
+    return(hist)
+  }  
+}
+
 
 
 
