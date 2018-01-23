@@ -25,16 +25,16 @@ rm(extr)
 not_extr <- filter(samples, is.na(extraction_id))
 
 # # get notes to see why not extracted
-# temp <- leyte %>% 
-#   tbl("clownfish") %>% 
-#   filter(sample_id %in% not_extr$sample_id) %>% 
-#   select(sample_id, notes) %>% 
+# temp <- leyte %>%
+#   tbl("clownfish") %>%
+#   filter(sample_id %in% not_extr$sample_id) %>%
+#   select(sample_id, notes) %>%
 #   collect()
 # not_extr <- left_join(not_extr, temp, by = "sample_id")
 # rm(temp)
 # 
 # # remove samples that cannot be extracted
-# not_extr <- not_extr %>% 
+# not_extr <- not_extr %>%
 #   filter(!grepl("no", notes))
 # 
 # # save list of samples to be extracted
