@@ -139,15 +139,24 @@ make_plate_with_negs <- function(list_of_ids, id_type){
 }
 
 
-# make_plate ####
+# make_platemap ####
 #' turn a table into plates with negative controls
 #' @export
 #' @name make_plate
 #' @author Michelle Stuart
-#' @param x = list of ids
-#' @param y = id_type
+#' @param x = tble
 #' @examples 
-#' plate <- make_plate_with_negs(fish)
+#' plate <- make_plate(fish$extr_id)
+
+make_platemap <- function(tble){
+  plate <- tble %>% 
+    select(contains("id"), well) %>% 
+    mutate(row = substr(well, 1, 1), 
+      col = as.numeric(substr(well, 2, 3)))
+  plate <- plate %>% 
+    select(row, col, contains("id"))
+  platemap <<- as.matrix(reshape2::acast(plate, plate$row ~ plate$col))
+}
 
 
 
