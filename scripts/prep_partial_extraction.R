@@ -32,6 +32,9 @@ blank <- blank %>%
   arrange(row) %>%  
   slice(1:x)
 
+# arrange it again by columns so that samples are added top to bottom as we are used to (instead of left to right)
+blank <- arrange(blank, col)
+
 # attach wells to samples
 work1 <- cbind(work1, blank)
 work1 <- select(work1, row, col, sample_id)
@@ -39,8 +42,8 @@ work2 <- cbind(work2, blank)
 work2 <- select(work2, row, col, sample_id)
 
 # make a source map
-platemap1 <<- as.matrix(reshape2::acast(work1, work1$row ~ work1$col))
-platemap2 <<- as.matrix(reshape2::acast(work2, work2$row ~ work2$col))
+platemap1 <- as.matrix(reshape2::acast(work1, work1$row ~ work1$col))
+platemap2 <- as.matrix(reshape2::acast(work2, work2$row ~ work2$col))
 
 work1 <- mutate(work1, plate = 1)
 work2 <- mutate(work2, plate = 2)
@@ -101,10 +104,30 @@ extr <- extr %>%
     paste(mins$extraction_id[1], "-", maxs$extraction_id[1], sep = ""), 
     paste(mins$extraction_id[2], "-", maxs$extraction_id[2], sep = "")))
   
-# ### import the extract_list into the database ####
+# ## import the extract_list into the database ####
 # lab <- write_db("Laboratory")
 # 
 # dbWriteTable(lab, "extraction", extr, row.names = F, overwrite = F, append = T)
 # 
 # dbDisconnect(lab)
 # rm(lab)
+
+# make a source plate
+lab <- read_db("Laboratory")
+extr <- lab %>% 
+  tbl("extraction") %>% 
+  collect() %>% 
+  filter(grepl("January 2018", notes)) %>% 
+  select(extraction_id, well, plate) %>% 
+  arrange
+
+# debugonce(make_platemap)
+plate1 <- extr %>% 
+  filter(plate == "E4405-E4477")
+platemap1 <- make_platemap(plate1)
+# write.csv(platemap1, file="data/sourcemap1.csv")
+
+plate2 <- extr %>% 
+  filter(plate == "E4478-E4550")
+platemap2 <- make_platemap(plate2)
+# write.csv(platemap2, file="data/sourcemap2.csv")
