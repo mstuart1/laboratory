@@ -165,5 +165,5 @@ not_pass <- not_pass %>%
 lig_prog <- not_pass %>% 
   filter(grepl("planned", lig_notes)) %>% 
   select(sample_id)
-
+not_pass <- anti_join(not_pass, lig_prog, by = "sample_id")
 
