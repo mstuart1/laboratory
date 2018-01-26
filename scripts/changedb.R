@@ -9,28 +9,18 @@ lab <- write_db("Laboratory")
 # #for this iteration this script, I am going to change the notes on a group of digests
 # 
 # # pull in all table
-# digs <- lab %>% dbReadTable("digest") %>% collect()
-ligs <- lab %>% dbReadTable("ligation") %>% collect()
-# 
-# 
-# change <- digs %>%
-  # filter(extraction_id %in% c("E4132", "E4139", "E4152", "E4157", "E4162", "E1463", "E4164", "E4168", "E4172")) %>% 
-    # mutate(vol_in = 15, 
-          # ng_in = ng_in/2)
-  # filter(date == "2015-12-01") %>% 
-  # filter(digest_id >= "D3340" & digest_id < "D3724") %>% 
-  # filter(extraction_id >= "E4289") %>%
-  # mutate(notes = "remaining fin clips don't fit into a set of 2 96 well plates, plan alternative") %>%
-  # mutate(plate = "D2487-D2510")
-  # mutate(date = "2017-10-19", notes = NA)
-  # mutate(notes = NA)
-# 
+digs <- lab %>% dbReadTable("digest") %>% collect()
+# ligs <- lab %>% dbReadTable("ligation") %>% collect()
 
-change <- ligs %>% 
-  mutate(notes = ifelse(ligation_id >= "L3171", "ligation planned for January 2018", notes))
+change <- digs %>%
+  filter(digest_id >= "D4588") %>%
+  mutate(notes = NA)
 
-# digs <- change_rows(digs, change, "digest_id")
-ligs <- change_rows(ligs, change, "ligation_id")
+# change <- ligs %>% 
+  # mutate(notes = ifelse(ligation_id >= "L3171", "ligation planned for January 2018", notes))
+
+digs <- change_rows(digs, change, "digest_id")
+# ligs <- change_rows(ligs, change, "ligation_id")
 # write the changes to the db
 ################### BE CAREFUL ########################################
 # dbWriteTable(lab, "digest", digs, row.names = F, overwrite = T)
