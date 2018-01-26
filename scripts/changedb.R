@@ -5,24 +5,30 @@ lab <- write_db("Laboratory")
 
 # THIS DEPENDS ON WHICH TABLE YOU WANT TO WORK WITH 
 
-# for this iteration I'm going to adjust the volume of sample added and the quant
-# #for this iteration this script, I am going to change the notes on a group of digests
-# 
-# # pull in all table
-digs <- lab %>% dbReadTable("digest") %>% collect()
+# pull in all table
+extr <- lab %>% dbReadTable("extraction") %>% collect()
+# digs <- lab %>% dbReadTable("digest") %>% collect()
 # ligs <- lab %>% dbReadTable("ligation") %>% collect()
 
-change <- digs %>%
-  filter(digest_id >= "D4588") %>%
-  mutate(notes = NA)
+change <- extr %>% 
+  filter(extraction_id >= "E4405") %>% 
+  mutate(notes = NA, 
+    date = "2018-01-26")
+
+
+# change <- digs %>%
+  # filter(digest_id >= "D4588") %>%
+  # mutate(notes = NA)
 
 # change <- ligs %>% 
   # mutate(notes = ifelse(ligation_id >= "L3171", "ligation planned for January 2018", notes))
 
-digs <- change_rows(digs, change, "digest_id")
+extr <- change_rows(extr, change, "extraction_id")
+# digs <- change_rows(digs, change, "digest_id")
 # ligs <- change_rows(ligs, change, "ligation_id")
 # write the changes to the db
 ################### BE CAREFUL ########################################
+dbWriteTable(lab, "extraction", extr, row.names = F, overwrite = T)
 # dbWriteTable(lab, "digest", digs, row.names = F, overwrite = T)
 # dbWriteTable(lab, "ligation", ligs, row.names = F, overwrite = T)
 # 
