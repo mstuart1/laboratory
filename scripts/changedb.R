@@ -3,7 +3,7 @@ source("scripts/lab_helpers.R")
 library(dplyr)
 lab <- write_db("Laboratory")
 
-# THIS DEPENDS ON WHICH TABLE YOU WANT TO WORK WITH 
+# THIS DEPENDS ON WHICH TABLE YOU WANT TO WORK WITH ####
 
 # pull in all table
 extr <- lab %>% dbReadTable("extraction") %>% collect()
@@ -11,10 +11,8 @@ extr <- lab %>% dbReadTable("extraction") %>% collect()
 # ligs <- lab %>% dbReadTable("ligation") %>% collect()
 
 change <- extr %>% 
-  filter(extraction_id >= "E4405") %>% 
-  mutate(notes = NA, 
-    date = "2018-01-26")
-
+  filter(notes == "") %>% 
+  mutate(notes = NA)
 
 # change <- digs %>%
   # filter(digest_id >= "D4588") %>%
@@ -24,6 +22,7 @@ change <- extr %>%
   # mutate(notes = ifelse(ligation_id >= "L3171", "ligation planned for January 2018", notes))
 
 extr <- change_rows(extr, change, "extraction_id")
+
 # digs <- change_rows(digs, change, "digest_id")
 # ligs <- change_rows(ligs, change, "ligation_id")
 # write the changes to the db
