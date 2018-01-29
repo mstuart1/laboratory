@@ -6,34 +6,38 @@ source("scripts/lab_helpers.R")
 lab <- read_db("Laboratory")
 
 # which type of plate are you reading, extraction or digest?
-# x <- "extraction"
-x <- "digest"
+x <- "extraction"
+# x <- "digest"
 
 # which plates need to be read?
 work <- lab %>% 
   tbl(x) %>% 
-  filter(digest_id >= "D4588") %>% 
+  # filter(digest_id >= "D4588") %>% 
+  filter(extraction_id >="E4405") %>% 
   # filter(is.na(quant)) %>% # if you want any unquantified plates
   # filter(plate == "E3161-E3254" | plate == "E3255-E3348" | plate == "E3349-E3442" | plate == "E3443-E3536") %>%  # if you want to specify plates
   # filter(!is.na(plate)) %>% # eliminate any plates that haven't been extracted yet
   collect() %>% 
+  # create row & col to correctly arrange the wells in order
   mutate(row = factor(substr(well, 1, 1), levels = c("A", "B", "C", "D", "E", "F", "G", "H")), 
          col = factor(substr(well, 2, 3), levels = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12))) %>% 
   arrange(plate, col, row) %>% 
   select(contains("id"), well, plate) # the first 2 columns of any table are the id columns
 
-# how many plates will be read?
-num_plate <- nrow(work)/96
+# how many plates will be read? ####
+num_plate <- work %>% 
+  group_by(plate) %>% 
+  summarise(count = n())
 
-if (num_plate >= 12){
-  
+if (nrow(num_plate) >= 12){
+  # move the twelfth plate to it's own table - its firsts will not fit with the others
+  remove <- num_plate %>% slice(12:nrow(num_plate))
+  twelve <- work %>% 
+    filter(plate %in% remove$plate)
+  work <- anti_join(work, twelve, by = "extraction_id")
 }
-# move the twelfth plate to it's own table - its firsts will not fit with the others
-twelve <- work %>% 
-  filter(plate == "E4195-E4288")
 
-work <- anti_join(work, twelve, by = "extraction_id")
-
+# pull out firsts and create stds ####
 # all of the first columns are going to be replaced with standards, grab samples to be moved
 firsts <- work %>% 
   filter(grepl("1", well) & !grepl("11", well) & !grepl("10", well) & !grepl("12", well))
@@ -58,7 +62,7 @@ plates <- work %>%
   filter(!is.na(plate)) %>% 
   arrange(plate)
 
-# create plates from this db info
+# create plates from this db info ####
 
 for (i in seq(nrow(plates))){ # can't have more than 11 columns of samples on a firsts plate
   # filter down to one plate
@@ -67,7 +71,7 @@ for (i in seq(nrow(plates))){ # can't have more than 11 columns of samples on a 
     filter(plate == x)
   # prep a map
   plate <- plate_from_db(current, "extraction_id")
-  write.csv(platemap, file = paste("./output/",Sys.Date(), x, ".csv", sep = ""))
+  write.csv(platemap, file = paste("data/",Sys.Date(), x, ".csv", sep = ""))
   
   # update the location for the firsts
   temp <- firsts %>% 
@@ -102,32 +106,30 @@ id_2 <- rep("STD", 8)
 row <- rep(LETTERS[1:8])
 col <- rep("1", 8)
 plate <- rep("firsts", 8)
-temp <- data.frame(id_1, id_2, row, col, plate)
-temp$well <- paste(row, col, sep = "")
-temp$row <- NULL
-temp$col <- NULL
-temp <- select(temp, id_1, id_2, well, plate)
+temp <- data.frame(id_1, id_2, row, col, plate) %>% 
+  mutate(well = paste(row, col, sep = "")) %>% 
+  select(id_1, id_2, well, plate)
 names(temp) <- names(firsts)
 
 
-  # replace with standards
-  stds <- temp %>% 
-    mutate(extraction_id = "STD", 
-    digest_id = "STD",
-    sample_id = "STD") %>% 
-    mutate(plate = "firsts") %>% 
-    select(-5) %>%  # remove the last column, which doesn't match work
-    distinct()
+# # replace with standards this is already done above
+# stds <- temp %>% 
+#   mutate(extraction_id = "STD", 
+#          digest_id = "STD",
+#          sample_id = "STD") %>% 
+#   mutate(plate = "firsts") %>% 
+#   select(-5) %>%  # remove the last column, which doesn't match work
+#   distinct()
   
   # join back to firsts
-  firsts <- rbind(firsts, stds)
+  firsts <- rbind(firsts, temp)
 
   # make the plate map
   plate <- plate_from_db(firsts, "extraction_id") 
-  write.csv(plate, file = paste("./output/", Sys.Date(), "_firsts_list.csv", sep = "")) # save this for locating samples when reading in plate data
+  write.csv(plate, file = paste("data/", Sys.Date(), "_firsts_list.csv", sep = "")) # save this for locating samples when reading in plate data
   
-  write.csv(platemap, file = paste("./output/",Sys.Date(), "_firsts.csv", sep = ""))
-  # 
+  write.csv(platemap, file = paste("data/",Sys.Date(), "_firsts.csv", sep = ""))
+   
   # # create firsts for the twelfth plate
   # 
   # firsts <- twelve %>% 
