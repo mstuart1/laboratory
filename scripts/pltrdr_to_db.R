@@ -5,12 +5,14 @@ library(stringr)
 source("scripts/lab_helpers.R")
 
 # what types of samples are these
-# table = "extraction"
-table = "digest"
+table = "extraction"
+# table = "digest"
 # table = "ligation"
 
-# which plate is it?
-range = c("D3916-D4011", "D4012-D4107", "D4108-D4203", "D4204-D4299", "D4300-D4395", "D4396-D4491", "D4492-D4587")
+# which plates?
+range <- c("E4405-E4477", "E4488-E4550")
+# range <- c("D3916-D4011", "D4012-D4107", "D4108-D4203", "D4204-D4299", "D4300-D4395", "D4396-D4491", "D4492-D4587")
+
 
 # # special ####
 # # read in the plate reader locations
@@ -21,13 +23,18 @@ range = c("D3916-D4011", "D4012-D4107", "D4108-D4203", "D4204-D4299", "D4300-D43
 
 # for (i in 3:length(range)){
 # read in plate reader data for the first plate
-# platefile1 = "data/2017-12-04-plate1.txt"
-platefile1 = paste("data/2017-11-27-plate", i, ".txt", sep = "")
-platefile2 = paste("data/2017-11-27-plate", length(range)+1, ".txt", sep = "")
+platefile1 = "data/2018-01-30-plate1_2a.txt"
+# platefile1 = paste("data/2017-11-27-plate", i, ".txt", sep = "")
+platefile2 = "data/2018-01-30-plate2b.txt"
+platefile3 = "data/2018-01-30-plate3.txt"
 # colsinplate1 = 2:12 # is this a full plate?
 
+files <- c(platefile1, platefile2, platefile3)
+for (i in 1:nrow){
+
+
 # skip the lines before the data
-strs <- readLines(platefile1, skipNul = T)
+strs <- readLines(i, skipNul = T)
 linestoskip = (which(strs == "Group: Unknowns")) # the number of lines to skip
 
 # create a table that contains well locations and quantities
@@ -35,6 +42,12 @@ dat1 <- read.table(text = strs,  skip = linestoskip, sep = "\t", fill = T, heade
 
 # remove footer rows
 dat1 <- dat1[1:(which(dat1$Sample == "Group Summaries")-1), ]
+
+# special #### on 2018-01-30 I used to standards for plate 1 for half of plate 2 ####
+# dat2 <- dat1 %>% 
+#   filter(Sample == 89 | Sample == " ")
+# 
+# dat1 <- anti_join(dat1, dat2)
 
 # read in names for the samples
 lab <- write_db("Laboratory")
