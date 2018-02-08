@@ -16,9 +16,10 @@ extr <- lab %>% dbReadTable("extraction") %>% collect()
 # fails <- c("E3081", "E3113", "E3075", "E3124")
 
 change <- extr %>% 
-  filter(plate == "E2258-E2353")  %>% 
-  mutate(gel = "2015-11-19")
+  filter(plate == "E4478-E4550")  %>%
+  mutate(gel = "2018-02-07") 
   # filter(extraction_id %in% fails) %>%
+  # filter(extraction_id == "E4523") %>% 
   # mutate(notes = "no band on gel") # made sure to check that no pre-existing notes present
 
 # remove those few from the whole group (the extraction ids are for prechange rows)
