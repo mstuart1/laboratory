@@ -159,11 +159,22 @@ not_pass <- not_pass %>%
   # remove extractions that can't be digested
   filter(extraction_id >= "E0247",
     !grepl("empty", extr_notes),
-    !grepl("no band", extr_notes))
+    !grepl("no band", extr_notes), 
+    !grepl("APCL17"), sample_id)
 
 # for ligations that are in progress, remove those sample_ids from the list
 lig_prog <- not_pass %>% 
-  filter(grepl("planned", lig_notes)) %>% 
+  filter(grepl("planned", lig_notes), 
+    !grepl("failed", lig_notes)) %>% 
   select(sample_id)
 not_pass <- anti_join(not_pass, lig_prog, by = "sample_id")
 
+
+extr <- lab %>%
+  tbl("extraction") %>% 
+  select(sample_id, extraction_id, gel, notes) %>% 
+  collect()%>% 
+  filter(extraction_id %in% not_pass$extraction_id, 
+    !grepl("no band", notes), 
+    !grepl("empty", notes), 
+    !grepl("APCL17", sample_id)) 
