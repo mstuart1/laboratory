@@ -14,11 +14,11 @@ extr <- lab %>% dbReadTable("extraction") %>% collect()
 
 # change the values for a group of samples - this pulls out only the few that fit the filter
 # fails <- c("E3081", "E3113", "E3075", "E3124")
-wells <- c("B1", "A12", "D2", "E8", "G1", "H1", "G2", "H2", "H4", "H11")
+wells <- c("D2", "D4", "D10", "E6", "E8", "F6", "H3", "H12")
 
 change <- extr %>% 
-  filter(plate == "E4101-E4194")  %>%
-  mutate(gel = "2018-02-09", 
+  filter(plate == "E4007-E4100")  %>%
+  mutate(gel = "2018-02-12", 
     # double check that these notes are already empty ####
     notes = ifelse(well %in% wells, "no band", notes)) 
   # filter(extraction_id %in% fails) %>%
