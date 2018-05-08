@@ -6,28 +6,27 @@ lab <- write_db("Laboratory")
 # THIS DEPENDS ON WHICH TABLE YOU WANT TO WORK WITH ####
 
 # pull in all table
-extr <- lab %>% dbReadTable("extraction") %>% collect()
-# digs <- lab %>% dbReadTable("digest") %>% collect()
+# extr <- lab %>% dbReadTable("extraction") %>% collect()
+digs <- lab %>% dbReadTable("digest") %>% collect()
 # ligs <- lab %>% dbReadTable("ligation") %>% collect()
 
-change <- extr %>%
-  filter(extraction_id < "E0247", 
-    grepl("APCL", sample_id), 
-    !grepl("empty", notes)) %>% 
-  mutate(notes = ifelse(is.na(notes), "empty", paste("empty, ", notes)))
+# change <- extr %>%
+#   filter(extraction_id < "E0247", 
+#     grepl("APCL", sample_id), 
+#     !grepl("empty", notes)) %>% 
+#   mutate(notes = ifelse(is.na(notes), "empty", paste("empty, ", notes)))
 
-# change <- digs %>%
-  # filter(digest_id >= "D4588") %>%
-  # mutate(notes = NA)
+change <- digs %>%
+filter(digest_id >= "D4614") %>%
+mutate(notes = ifelse(is.na(notes), "redigest planned for summer 2018", paste("redigest planned for summer 2018, ", notes)))
 
 # change <- ligs %>%
 #   filter(notes == "") %>% 
 #   mutate(notes = NA)
 #   # mutate(notes = ifelse(ligation_id >= "L3171", "ligation planned for January 2018", notes))
 
-extr <- change_rows(extr, change, "extraction_id")
-
-# digs <- change_rows(digs, change, "digest_id")
+# extr <- change_rows(extr, change, "extraction_id")
+digs <- change_rows(digs, change, "digest_id")
 # ligs <- change_rows(ligs, change, "ligation_id")
 # write the changes to the db
 ################### BE CAREFUL ########################################
