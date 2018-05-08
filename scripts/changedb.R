@@ -31,7 +31,7 @@ extr <- change_rows(extr, change, "extraction_id")
 # ligs <- change_rows(ligs, change, "ligation_id")
 # write the changes to the db
 ################### BE CAREFUL ########################################
-dbWriteTable(lab, "extraction", extr, row.names = F, overwrite = T)
+# dbWriteTable(lab, "extraction", extr, row.names = F, overwrite = T)
 # dbWriteTable(lab, "digest", digs, row.names = F, overwrite = T)
 # dbWriteTable(lab, "ligation", ligs, row.names = F, overwrite = T)
 # 
