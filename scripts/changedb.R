@@ -10,16 +10,20 @@ extr <- lab %>% dbReadTable("extraction") %>% collect()
 # digs <- lab %>% dbReadTable("digest") %>% collect()
 # ligs <- lab %>% dbReadTable("ligation") %>% collect()
 
-change <- extr %>% 
-  filter(notes == "") %>% 
-  mutate(notes = NA)
+change <- extr %>%
+  filter(extraction_id < "E0247", 
+    grepl("APCL", sample_id), 
+    !grepl("empty", notes)) %>% 
+  mutate(notes = ifelse(is.na(notes), "empty", paste("empty, ", notes)))
 
 # change <- digs %>%
   # filter(digest_id >= "D4588") %>%
   # mutate(notes = NA)
 
-# change <- ligs %>% 
-  # mutate(notes = ifelse(ligation_id >= "L3171", "ligation planned for January 2018", notes))
+# change <- ligs %>%
+#   filter(notes == "") %>% 
+#   mutate(notes = NA)
+#   # mutate(notes = ifelse(ligation_id >= "L3171", "ligation planned for January 2018", notes))
 
 extr <- change_rows(extr, change, "extraction_id")
 
