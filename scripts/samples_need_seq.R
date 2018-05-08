@@ -130,7 +130,8 @@ not_pass <- filter(samples, is.na(seq))
 lig_notes <- lab %>% 
   tbl("ligation") %>% 
   select(ligation_id, notes) %>% 
-  collect()
+  collect() %>% 
+  filter(!grepl("failed", notes))
 not_pass <- left_join(not_pass, lig_notes, by = "ligation_id") %>% 
   rename(lig_notes = notes)
 rm(lig_notes)
@@ -146,7 +147,11 @@ rm(dig_notes)
 extr_notes <- lab %>% 
   tbl("extraction") %>% 
   select(extraction_id, notes) %>% 
-  collect()
+  collect() %>% 
+  filter(extraction_id != "E0726", # sample is empty but notes aren't filtering
+    !grepl("empty", notes), 
+    !grepl("no band", notes), 
+    !grepl("No band", notes))
 not_pass <- left_join(not_pass, extr_notes, by = "extraction_id") %>% 
   rename(extr_notes = notes)
 rm(extr_notes)
@@ -157,10 +162,8 @@ not_pass <- not_pass %>%
 
 not_pass <- not_pass %>%
   # remove extractions that can't be digested
-  filter(extraction_id >= "E0247",
-    !grepl("empty", extr_notes),
-    !grepl("no band", extr_notes), 
-    !grepl("APCL17"), sample_id)
+  filter(extraction_id >= "E0247", 
+    extraction_id != "E0726")
 
 # for ligations that are in progress, remove those sample_ids from the list
 lig_prog <- not_pass %>% 
@@ -168,13 +171,9 @@ lig_prog <- not_pass %>%
     !grepl("failed", lig_notes)) %>% 
   select(sample_id)
 not_pass <- anti_join(not_pass, lig_prog, by = "sample_id")
+rm(lig_prog)
 
-
-extr <- lab %>%
-  tbl("extraction") %>% 
-  select(sample_id, extraction_id, gel, notes) %>% 
-  collect()%>% 
-  filter(extraction_id %in% not_pass$extraction_id, 
-    !grepl("no band", notes), 
-    !grepl("empty", notes), 
-    !grepl("APCL17", sample_id)) 
+# which of these samples have not been digested? ####
+no_dig <- not_pass %>% 
+  filter(is.na(digest_id)) %>% 
+  arrange(sample_id)
