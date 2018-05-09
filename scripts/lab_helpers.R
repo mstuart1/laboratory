@@ -379,16 +379,18 @@ samp_from_lig <- function(table_name){
 #' sample_map <- heatmap(plate_as_long_table)
 
 heatmap <- function(plate_as_long_table, id){
-  map <- map %>% 
-    select(row, col, pass, id, filter) %>% 
-    mutate(row = factor(row, levels = c("H", "G", "F", "E", "D", "C", "B", "A")), 
-           col = factor(col, levels = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)))
+  map <- plate_as_long_table  %>% 
+    mutate(row = substr(well, 1, 1),
+      row = factor(row, levels = c("H", "G", "F", "E", "D", "C", "B", "A")), 
+      col = substr(well, 2, 3),
+           col = factor(col, levels = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12))) %>% 
+    select(row, col, contains("id"), filter)
   
   plateheatmap <- ggplot(map, aes(x=col, y=row, fill= filter)) + 
     geom_tile()
   
   plateheatmap + 
-    geom_text(aes(col, row, label = ligation_id), color = "black", size = 4) +
+    geom_text(aes(col, row, label = map[,3]), color = "black", size = 4) +
     theme(
       axis.title.x = element_blank(),
       axis.title.y = element_blank(),
@@ -396,8 +398,7 @@ heatmap <- function(plate_as_long_table, id){
       panel.border = element_blank(),
       panel.background = element_blank(),
       axis.ticks = element_blank())
-  
-  ggsave(paste("plots/", filter, Sys.Date(), ".pdf", sep = ""))
+  return(plateheatmap)
   
 }
 

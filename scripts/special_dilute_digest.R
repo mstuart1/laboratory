@@ -200,38 +200,22 @@ for (i in 1:nrow(digests)){ # break it down into one plate at a time
 
   for(j in 1:nrow(extr_plates)){
     extr_source <- source %>%
-      filter(plate == extr_plates$plate[j])
+      filter(plate == extr_plates$plate[j]) %>% 
+      select(extraction_id, well) %>% 
+      mutate(filter = ifelse(extraction_id %in% extr$extraction_id, "yes", "no"))
+    
+    test <- heatmap(extr_source, extraction_id)
+    ggsave(paste("plots/extr_source", digests$plate[i], j, Sys.Date(), ".pdf", sep = "_"))
+    
+    
     plate <- plate_from_db(extr_source, "extraction_id") # this will give an error if you try to do more than one plate at once
-    write.csv(platemap, file = paste("output/", Sys.Date(), "_extract_source_plate", i,"_", j, ".csv", sep = ""))
+    write.csv(platemap, file = paste("output/", Sys.Date(), "_extr_source_", i,"_", j, ".csv", sep = ""))
 
   }
 
 }
-rm(temp, temp2, i, j, plate, platemap, digests, extr_plates)
 
 
-#
-# # double check that 15 will reduce it enough - the following should result in zero
-# fifteen <- extr %>%
-#   mutate(DNA = quant * 15) %>%
-#   filter(DNA > 5000) %>%
-#   arrange(extraction_id)
-
-# find these samples and make sure to highlight on plate maps, only add 15uL sample to digest
-
-# # to print plates
-# library(gridExtra)
-#
-# file_list <- sort(list.files(path = "output", pattern = "2017-10-18*")) # produces list of output files
-#
-# for (i in 1:length(file_list)){
-#   infile <- paste("output/", file_list[i], sep = "")
-#   t <- read.csv(infile)
-#   out <- paste("output/", substr(file_list[i], 1, nchar(file_list[i])-4), ".pdf",  sep = "")
-#   pdf(out, height=11, width = 8.5)
-#   grid.table(t)
-#   dev.off()
-# }
 
 
   
