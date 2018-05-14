@@ -207,10 +207,6 @@ for (i in 1:nrow(digests)){ # break it down into one plate at a time
     test <- heatmap(extr_source, extraction_id)
     ggsave(paste("plots/extr_source", digests$plate[i], j, Sys.Date(), ".pdf", sep = "_"))
     
-    
-    plate <- plate_from_db(extr_source, "extraction_id") # this will give an error if you try to do more than one plate at once
-    write.csv(platemap, file = paste("output/", Sys.Date(), "_extr_source_", i,"_", j, ".csv", sep = ""))
-
   }
 
 }
