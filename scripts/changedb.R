@@ -7,8 +7,8 @@ lab <- write_db("Laboratory")
 
 # pull in all table
 # extr <- lab %>% dbReadTable("extraction") %>% collect()
-digs <- lab %>% dbReadTable("digest") %>% collect()
-# ligs <- lab %>% dbReadTable("ligation") %>% collect()
+# digs <- lab %>% dbReadTable("digest") %>% collect()
+ligs <- lab %>% dbReadTable("ligation") %>% collect()
 
 # change <- extr %>%
 #   filter(extraction_id < "E0247", 
@@ -16,18 +16,18 @@ digs <- lab %>% dbReadTable("digest") %>% collect()
 #     !grepl("empty", notes)) %>% 
 #   mutate(notes = ifelse(is.na(notes), "empty", paste("empty, ", notes)))
 
-change <- digs %>%
-filter(digest_id >= "D4614") %>%
-mutate(notes = ifelse(is.na(notes), "redigest planned for summer 2018", paste("redigest planned for summer 2018, ", notes)))
+# change <- digs %>%
+# filter(digest_id >= "D4614") %>%
+# mutate(notes = ifelse(is.na(notes), "redigest planned for summer 2018", paste("redigest planned for summer 2018, ", notes)))
 
-# change <- ligs %>%
-#   filter(notes == "") %>% 
-#   mutate(notes = NA)
-#   # mutate(notes = ifelse(ligation_id >= "L3171", "ligation planned for January 2018", notes))
+change <- ligs %>%
+  filter(pool == "P083" | pool == "P084") %>%
+  mutate(plate = "L3651-L3746")
+  # mutate(notes = ifelse(ligation_id >= "L3171", "ligation planned for January 2018", notes))
 
 # extr <- change_rows(extr, change, "extraction_id")
-digs <- change_rows(digs, change, "digest_id")
-# ligs <- change_rows(ligs, change, "ligation_id")
+# digs <- change_rows(digs, change, "digest_id")
+ligs <- change_rows(ligs, change, "ligation_id")
 # write the changes to the db
 ################### BE CAREFUL ########################################
 # dbWriteTable(lab, "extraction", extr, row.names = F, overwrite = T)
