@@ -21,8 +21,11 @@ ligs <- lab %>% dbReadTable("ligation") %>% collect()
 # mutate(notes = ifelse(is.na(notes), "redigest planned for summer 2018", paste("redigest planned for summer 2018, ", notes)))
 
 change <- ligs %>%
-  filter(pool == "P083" | pool == "P084") %>%
-  mutate(plate = "L3651-L3746")
+  filter(plate == "L3171-L3266" | plate == "L3651-L3746") %>%
+  arrange(ligation_id) %>% 
+  mutate(notes = NA, 
+    date = "2018-05-16", 
+    barcode_num = rep(1:48, 4))
   # mutate(notes = ifelse(ligation_id >= "L3171", "ligation planned for January 2018", notes))
 
 # extr <- change_rows(extr, change, "extraction_id")
