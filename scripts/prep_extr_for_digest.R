@@ -5,6 +5,7 @@
 
 # connect to the database
 library(dplyr)
+library(ggplot2)
 source("scripts/lab_helpers.R")
 
 lab <- write_db("Laboratory")
@@ -14,71 +15,85 @@ dig <- dbReadTable(lab, "digest")
 
 # get list of extracted samples that are digestable
 extr <- dbReadTable(lab, "extraction") %>% 
-  filter(extraction_id > "E0036") %>%  # must be part of the current method
-  filter(quant > 5) %>%  # must have at least 5ng/ul concentration to digest
-  filter(grepl("APCL", sample_id)) %>%  # must be part of the current project
+  filter(plate == "E4478-E4550") %>%  # must be part of the current method
+  # filter(quant > 5) %>%  # must have at least 5ng/ul concentration to digest
+  # filter(grepl("APCL", sample_id)) %>%  # must be part of the current project
   filter(!extraction_id %in% dig$extraction_id) %>%  # not digested yet
   select(extraction_id, well, plate, quant) %>% 
   arrange(extraction_id)
 
-# get a list of plate names and the count of samples from each plate
-counts <- extr %>% 
-  group_by(plate) %>% 
-  summarise(samples = n()) %>% # count the number of samples to be digested on each plate
-  filter(samples > 80) %>%  # remove plates that are not full or not almost full
-  arrange(plate)
+# # get a list of plate names and the count of samples from each plate
+# counts <- extr %>% 
+#   group_by(plate) %>% 
+#   summarise(samples = n()) %>% # count the number of samples to be digested on each plate
+#   filter(samples > 80) %>%  # remove plates that are not full or not almost full
+#   arrange(plate)
+# 
+# # get a list of the extraction samples that are in these plates
+# in_plates <- extr %>% 
+#   filter(plate %in% counts$plate)
+# 
+# # get a list of samples that are available to fill in the gaps
+# fills <- anti_join(extr, in_plates, by = "extraction_id")
+# 
+# rm(dig)
+# 
+# digest <- data.frame()
+# # set up the plates
+# for (i in 1:nrow(counts)){ # for all of the plates listed in the counts table
+#   temp <- in_plates %>%
+#     filter(plate == counts$plate[i]) %>% # find the extracts in that plate
+#     mutate(dig_plate = paste("plate", i, sep = "")) %>% # add a digest plate name
+#     mutate(dig_well = well) # add a destination well
+#   x <- nrow(temp)
+#   temp[x+1, ] <- c("XXXX", "D2", "blank", 0, paste("plate", i, sep = ""), "D2") # add blanks
+#   temp[x+2, ] <- c("XXXX", "E8", "blank", 0, paste("plate", i, sep = ""), "E8")
+#   temp <- temp %>% 
+#     mutate(row = substr(dig_well, 1, 1),
+#       col = substr(dig_well, 2, 3)) 
+#   if(nrow(temp) < 96){ # if the plate is not full
+#     # find the empty wells
+#     plate_master <- data.frame( row = rep(LETTERS[1:8], 12), col = unlist(lapply(1:12, rep, 8)))
+#     plate_master <- plate_master %>% 
+#       mutate(well = paste(row, col, sep = ""))
+#     holes <- anti_join(plate_master, temp, by = "well") %>% 
+#       rename(dig_well = well)
+#     # fill in the holes
+#     for (j in 1:nrow(holes)){
+#       temp2 <- fills[j, ] # take the first row of fills
+#       temp2 <- temp2 %>% 
+#         mutate(
+#           dig_plate = temp$dig_plate[1], # add the needed columns for the digest plate
+#           dig_well = holes$dig_well[j], 
+#           row = holes$row[j], 
+#           col = holes$col[j])
+#       fills <- anti_join(fills, temp2) # remove the fill from the fill table
+#       temp <- rbind(temp, temp2) # add it to the digest plate
+#     }
+#   }
+#   digest <- rbind(digest, temp) 
+#   digest <- digest %>%   # attach to master list of digests
+#     mutate(col = formatC(as.numeric(col), width = 2, format = "d", flag = "0")) %>% 
+#     arrange(dig_plate, col, row) 
+#   rm(temp, i, x)
+# }
 
-# get a list of the extraction samples that are in these plates
-in_plates <- extr %>% 
-  filter(plate %in% counts$plate)
+digest <- extr %>%
+  mutate(digest_id = 1:nrow(extr), 
+    vol_in = 30, 
+    plate = "plate1", 
+    ng_in = 30*as.numeric(quant))
 
-# get a list of samples that are available to fill in the gaps
-fills <- anti_join(extr, in_plates, by = "extraction_id")
-
-rm(dig)
-
-digest <- data.frame()
-# set up the plates
-for (i in 1:nrow(counts)){ # for all of the plates listed in the counts table
-  temp <- in_plates %>%
-    filter(plate == counts$plate[i]) %>% # find the extracts in that plate
-    mutate(dig_plate = paste("plate", i, sep = "")) %>% # add a digest plate name
-    mutate(dig_well = well) # add a destination well
-  x <- nrow(temp)
-  temp[x+1, ] <- c("XXXX", "D2", "blank", 0, paste("plate", i, sep = ""), "D2") # add blanks
-  temp[x+2, ] <- c("XXXX", "E8", "blank", 0, paste("plate", i, sep = ""), "E8")
-  temp <- temp %>% 
-    mutate(row = substr(dig_well, 1, 1),
-      col = substr(dig_well, 2, 3)) 
-  if(nrow(temp) < 96){ # if the plate is not full
-    # find the empty wells
-    plate_master <- data.frame( row = rep(LETTERS[1:8], 12), col = unlist(lapply(1:12, rep, 8)))
-    plate_master <- plate_master %>% 
-      mutate(well = paste(row, col, sep = ""))
-    holes <- anti_join(plate_master, temp, by = "well") %>% 
-      rename(dig_well = well)
-    # fill in the holes
-    for (j in 1:nrow(holes)){
-      temp2 <- fills[j, ] # take the first row of fills
-      temp2 <- temp2 %>% 
-        mutate(
-          dig_plate = temp$dig_plate[1], # add the needed columns for the digest plate
-          dig_well = holes$dig_well[j], 
-          row = holes$row[j], 
-          col = holes$col[j])
-      fills <- anti_join(fills, temp2) # remove the fill from the fill table
-      temp <- rbind(temp, temp2) # add it to the digest plate
-    }
-  }
-  digest <- rbind(digest, temp) 
-  digest <- digest %>%   # attach to master list of digests
-    mutate(col = formatC(as.numeric(col), width = 2, format = "d", flag = "0")) %>% 
-    arrange(dig_plate, col, row) 
-  rm(temp, i, x)
-}
-
+# adjust for heavily concentrated samples
 digest <- digest %>% 
-  mutate(digest_id = 1:nrow(digest))
+  mutate(vol_in = ifelse(ng_in > 5000, 15, 30), 
+    ng_in = ifelse(ng_in > 5000, 15*as.numeric(quant), 30*as.numeric(quant)))
+
+# adjust again if necessary
+digest <- digest %>% 
+  mutate(vol_in = ifelse(ng_in > 5000, 7, vol_in), 
+    ng_in = ifelse(ng_in > 5000, 7*as.numeric(quant), ng_in))
+
 
 ### ONLY DO THIS ONCE ###
 # generate digest numbers for database ####
@@ -98,43 +113,64 @@ digest <- digest %>%
 
 
 # make a note that these are planned extracts that haven't happened yet
-digest$notes <- "digests planned for October 2017 by MRS"
+digest$notes <- "digests planned for summer 2018 by MRS"
 
 # select columns for db
 digest <- digest %>% 
-  mutate(date = NA) %>% 
-  mutate(vol_in = "30") %>% # the volume used in this project
-  mutate(ng_in = 30 * as.numeric(quant)) %>% 
-  mutate(enzymes = "PstI_MluCI") %>% # the enzymes used in this project 
-  mutate(final_vol = NA) %>% 
-  mutate(quant = NA) %>% 
-  mutate(correction = NA) %>%
-  mutate(corr_message = NA) %>% 
-  mutate(corr_editor = NA) %>% 
-  mutate(corr_date = NA) %>% 
-  select(digest_id, extraction_id, date, vol_in, ng_in, enzymes, final_vol, quant, dig_well, dig_plate, notes, correction, corr_message, corr_editor, corr_date)
+  mutate(enzymes = "PstI_MluCI") # the enzymes used in this project 
 
-nplates <- digest %>% 
-  select(dig_plate) %>% 
-  distinct() 
+# nplates <- digest %>% 
+#   select(dig_plate) %>% 
+#   distinct() 
+# 
+# # change plate name to match range
+# for (i in 1:nrow(nplates)){
+#   x <- paste("plate", i, sep = "")
+#   name <- digest %>% 
+#     filter(dig_plate == x)
+#   if (nrow(name) > 0){
+#     digest <- anti_join(digest, name, by = "dig_plate") # remove these rows from digest
+#     a <- name %>% filter(dig_well == "A1") %>% select(digest_id) # get the first digest
+#     b <- name %>% filter(dig_well == "H12") %>% select(digest_id) # get the last digest
+#     name$dig_plate <- paste(a, "-", b, sep = "")
+#     digest <- rbind(digest, name) # add rows back in to extr
+#   }
+# }
 
-# change plate name to match range
-for (i in 1:nrow(nplates)){
-  x <- paste("plate", i, sep = "")
-  name <- digest %>% 
-    filter(dig_plate == x)
-  if (nrow(name) > 0){
-    digest <- anti_join(digest, name, by = "dig_plate") # remove these rows from digest
-    a <- name %>% filter(dig_well == "A1") %>% select(digest_id) # get the first digest
-    b <- name %>% filter(dig_well == "H12") %>% select(digest_id) # get the last digest
-    name$dig_plate <- paste(a, "-", b, sep = "")
-    digest <- rbind(digest, name) # add rows back in to extr
-  }
-}
-
+a <- digest %>% filter(well == "A1") %>% select(digest_id) # get the first digest
+b <- digest %>% filter(well == "F12") %>% select(digest_id) # get the last digest
 digest <- digest %>% 
-  rename(well = dig_well, 
-    plate = dig_plate)
+  mutate(plate = paste(a, b, sep = "-"))
+
+# make a heatmap based on the volume in
+
+  map <- digest  %>% 
+    mutate(row = substr(well, 1, 1),
+      row = factor(row, levels = c("H", "G", "F", "E", "D", "C", "B", "A")), 
+      col = substr(well, 2, 3),
+      col = factor(col, levels = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12))) %>% 
+    select(row, col, contains("id"), vol_in)
+  
+  plateheatmap <- ggplot(map, aes(x=col, y=row, fill= vol_in)) + 
+    geom_tile()
+  
+  plateheatmap + 
+    geom_text(aes(col, row, label = map[,3]), color = "black", size = 4) +
+    theme(
+      axis.title.x = element_blank(),
+      axis.title.y = element_blank(),
+      panel.grid.major = element_blank(),
+      panel.border = element_blank(),
+      panel.background = element_blank(),
+      axis.ticks = element_blank())
+  
+
+
+
+  
+# digest <- digest %>% 
+#   rename(well = dig_well, 
+#     plate = dig_plate)
 
 ### import the digest list into the database ####
 ############# BE CAREFUL #################################
@@ -197,20 +233,20 @@ digest <- digest %>%
 # }
 # rm(temp, temp2, i, j, plate, platemap, digests, extr_plates)
 # 
-# # find any extracts in the plan that need to be diluted (add 15uL sample plus
-# 15uL water instead of 30uL sample)
-digs <- lab %>%
-  tbl("digest") %>% 
-  collect() %>% 
-  filter(grepl("October 2017", notes))
-
-extr <- lab %>%
-  tbl("extraction") %>%
-  filter(extraction_id %in% digs$extraction_id) %>%
-  mutate(DNA = quant * 30) %>% # multiply the quant by 30 to calculate how much DNA will be digested
-  filter(DNA > 5000) %>% # find any samples that will contain more than 5ug in the digest
-  arrange(extraction_id) %>%
-  collect()
+# # # find any extracts in the plan that need to be diluted (add 15uL sample plus
+# # 15uL water instead of 30uL sample)
+# digs <- lab %>%
+#   tbl("digest") %>% 
+#   collect() %>% 
+#   filter(grepl("October 2017", notes))
+# 
+# extr <- lab %>%
+#   tbl("extraction") %>%
+#   filter(extraction_id %in% digs$extraction_id) %>%
+#   mutate(DNA = quant * 30) %>% # multiply the quant by 30 to calculate how much DNA will be digested
+#   filter(DNA > 5000) %>% # find any samples that will contain more than 5ug in the digest
+#   arrange(extraction_id) %>%
+#   collect()
 # 
 # # double check that 15 will reduce it enough - the following should result in zero
 # fifteen <- extr %>%
