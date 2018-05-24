@@ -14,11 +14,13 @@ lab <- write_db("Laboratory")
 dig <- dbReadTable(lab, "digest")
 
 # get list of extracted samples that are digestable
+wells <- c("A1", "B1", "C1", "D1", "E1", "F1", "G1")
 extr <- dbReadTable(lab, "extraction") %>% 
-  filter(plate == "E4478-E4550") %>%  # must be part of the current method
+  filter(plate == "E4405-E4477" & well %in% wells) %>% 
+  # filter(plate == "E4478-E4550") %>%  # must be part of the current method
   # filter(quant > 5) %>%  # must have at least 5ng/ul concentration to digest
   # filter(grepl("APCL", sample_id)) %>%  # must be part of the current project
-  filter(!extraction_id %in% dig$extraction_id) %>%  # not digested yet
+  # filter(!extraction_id %in% dig$extraction_id) %>%  # not digested yet
   select(extraction_id, well, plate, quant) %>% 
   arrange(extraction_id)
 
@@ -81,8 +83,9 @@ extr <- dbReadTable(lab, "extraction") %>%
 digest <- extr %>%
   mutate(digest_id = 1:nrow(extr), 
     vol_in = 30, 
-    plate = "plate1", 
-    ng_in = 30*as.numeric(quant))
+    plate = "D5501-D5573", 
+    ng_in = 30*as.numeric(quant), 
+    well = c("G2", "G3", "G4", "G5", "G6", "G7", "G8"))
 
 # adjust for heavily concentrated samples
 digest <- digest %>% 
@@ -137,40 +140,42 @@ digest <- digest %>%
 #   }
 # }
 
-a <- digest %>% filter(well == "A1") %>% select(digest_id) # get the first digest
-b <- digest %>% filter(well == "F12") %>% select(digest_id) # get the last digest
-digest <- digest %>% 
-  mutate(plate = paste(a, b, sep = "-"))
+# a <- digest %>% filter(well == "A1") %>% select(digest_id) # get the first digest
+# b <- digest %>% filter(well == "F12") %>% select(digest_id) # get the last digest
+# digest <- digest %>% 
+#   mutate(plate = paste(a, b, sep = "-"))
 
-# make a heatmap based on the volume in
-
-  map <- digest  %>% 
-    mutate(row = substr(well, 1, 1),
-      row = factor(row, levels = c("H", "G", "F", "E", "D", "C", "B", "A")), 
-      col = substr(well, 2, 3),
-      col = factor(col, levels = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12))) %>% 
-    select(row, col, contains("id"), vol_in)
-  
-  plateheatmap <- ggplot(map, aes(x=col, y=row, fill= vol_in)) + 
-    geom_tile()
-  
-  plateheatmap + 
-    geom_text(aes(col, row, label = map[,3]), color = "black", size = 4) +
-    theme(
-      axis.title.x = element_blank(),
-      axis.title.y = element_blank(),
-      panel.grid.major = element_blank(),
-      panel.border = element_blank(),
-      panel.background = element_blank(),
-      axis.ticks = element_blank())
-  
-
+# # make a heatmap based on the volume in
+# 
+#   map <- digest  %>% 
+#     mutate(row = substr(well, 1, 1),
+#       row = factor(row, levels = c("H", "G", "F", "E", "D", "C", "B", "A")), 
+#       col = substr(well, 2, 3),
+#       col = factor(col, levels = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12))) %>% 
+#     select(row, col, contains("id"), vol_in)
+#   
+#   plateheatmap <- ggplot(map, aes(x=col, y=row, fill= vol_in)) + 
+#     geom_tile()
+#   
+#   plateheatmap + 
+#     geom_text(aes(col, row, label = map[,3]), color = "black", size = 4) +
+#     theme(
+#       axis.title.x = element_blank(),
+#       axis.title.y = element_blank(),
+#       panel.grid.major = element_blank(),
+#       panel.border = element_blank(),
+#       panel.background = element_blank(),
+#       axis.ticks = element_blank())
+#   
+# 
 
 
   
 # digest <- digest %>% 
 #   rename(well = dig_well, 
 #     plate = dig_plate)
+
+
 
 ### import the digest list into the database ####
 ############# BE CAREFUL #################################
