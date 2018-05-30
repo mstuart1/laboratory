@@ -1,6 +1,7 @@
 # get work progress on all samples
 
 source("../genomics/scripts/gen_helpers.R")
+source("scripts/lab_helpers.R")
 leyte <- read_db("Leyte")
 lab <- read_db("Laboratory")
 
@@ -215,9 +216,10 @@ samples <- samples %>%
 
 # how many samples are beyond ligation but not seq'd yet ####
 in_progress <- samples %>% 
-  filter(lig_date > "2018-01-01")
+  filter(grepl("2018", lig_date) |    
+    grepl("2018", dig_date))
 samples <- samples %>% 
-  filter(!sample_id %in% in_progress)
+  filter(!sample_id %in% in_progress$sample_id)
 
 # how many samples have a digest planned ####
 dig_in_progress <- samples %>% 
@@ -246,4 +248,65 @@ extr_loc <- lab %>%
   collect()
 samples <- left_join(samples, extr_loc, by = "extraction_id")
 
+samples <- samples %>% 
+  select(sample_id, extraction_id, quant, plate, well) %>% 
+  distinct()
+
 write.csv(samples, file = paste("data/attempt_to_rescue_as_of_", Sys.Date(), ".csv", sep = ""), row.names = F)
+
+
+# make a platemap of samples ####
+samples <- read.csv("data/attempt_to_rescue_as_of_2018-05-22.csv", stringsAsFactors = F)
+
+# extraction plates to pull from and the # of samples in each plate
+plates <- samples %>% 
+  group_by(plate) %>% 
+  summarise(samps = n()) %>% 
+  arrange(desc(samps))
+
+# list of available wells in a plate
+wells <- data.frame( row = rep(LETTERS[1:8], 12), col = unlist(lapply(1:12, rep, 8)))
+wells <- wells %>% 
+  mutate(row = factor(row, levels = c("H", "G", "F", "E", "D", "C", "B", "A")), 
+col = factor(col, levels = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)), 
+    well = paste(row, col, sep = ""))
+
+need_wells <- data.frame()
+# have_wells <- data.frame()
+for(i in 1:nrow(plates)){
+  have_wells <- samples %>% 
+    filter(plate == plates$plate[i]) %>% 
+    filter(well %in% wells$well)
+  # have_wells <- rbind(have_wells, x)
+  # are there any wells that are not available?
+  unavail <- samples %>% 
+    filter(plate == plates$plate[i]) %>% 
+    filter(!well %in% wells$well)
+  wells <- anti_join(wells, have_wells, by = "well")
+  if (nrow(unavail) > 0){
+    need_wells <- rbind(need_wells, unavail)
+  }
+}
+
+in_tubes <- need_wells %>%
+  filter(plate == "E0439-E0534") # need to get rid of 7 samples
+write.csv(in_tubes, file = paste("digest_in_tubes_as_of_", Sys.Date(), ".csv", sep =""))
+
+wells <- rename(wells, new_well = well) 
+need_wells <- anti_join(need_wells, in_tubes, by = "extraction_id")
+# wells <- slice(wells, 1:28)
+need_wells <- cbind(need_wells, wells)
+
+samples <- anti_join(samples, need_wells, by = "extraction_id")
+samples <- samples %>% 
+  mutate(row = NA, col = NA, new_well = well)
+samples <- rbind(samples, need_wells)
+
+samples <- anti_join(samples, in_tubes, by = "extraction_id")
+
+samples <- samples %>% 
+  mutate(row = substr(new_well, 1,1), 
+    col = substr(new_well, 2, 3), 
+    row = factor(row, levels = c("H", "G", "F", "E", "D", "C", "B", "A")), 
+    col = factor(col, levels = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)))
+    
