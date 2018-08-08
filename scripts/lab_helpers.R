@@ -389,7 +389,7 @@ heatmap <- function(plate_as_long_table, id){
   plateheatmap <- ggplot(map, aes(x=col, y=row, fill= filter)) + 
     geom_tile()
   
-  plateheatmap + 
+  z <- plateheatmap + 
     geom_text(aes(col, row, label = map[,3]), color = "black", size = 4) +
     theme(
       axis.title.x = element_blank(),
@@ -398,7 +398,7 @@ heatmap <- function(plate_as_long_table, id){
       panel.border = element_blank(),
       panel.background = element_blank(),
       axis.ticks = element_blank())
-  return(plateheatmap)
+  return(z)
   
 }
 
