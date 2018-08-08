@@ -4,8 +4,9 @@
 source("scripts/lab_helpers.R")
 
 # define samples to be ligated (if known)
-dig_min <- "D3340"
-dig_max <- "D4587"
+# dig_min <- "D3340"
+# dig_max <- "D4587"
+
 
 # define regenotype pool (if known)
 regeno_min <- "D4588"
@@ -15,10 +16,14 @@ regeno_max <- "D4613"
 lab <- write_db("Laboratory")
 
 # pull digest info from db
-dig <- dbReadTable(lab, "digest") %>% 
-  filter(digest_id >= dig_min & digest_id <= dig_max & extraction_id != "XXXX") %>%
+
+dig <- readRDS("../methods/procedural_notebooks/digs_need_seq.Rdata") %>% 
   select(digest_id, quant, well, plate) %>% 
-  arrange(digest_id)
+    arrange(digest_id)
+# dig <- dbReadTable(lab, "digest") %>% 
+#   filter(digest_id >= dig_min & digest_id <= dig_max & extraction_id != "XXXX") %>%
+#   select(digest_id, quant, well, plate) %>% 
+#   arrange(digest_id)
 
 regeno <- dbReadTable(lab, "digest") %>% 
   filter(digest_id >= regeno_min & digest_id <= regeno_max & extraction_id != "XXXX") %>%
@@ -30,7 +35,7 @@ regeno <- dbReadTable(lab, "digest") %>%
 # out <- lig_ng(dig, regeno)
 out <- data.frame() # make a blank data frame to write to
 y <- nrow(dig) # get the number of beginning rows
-for(i in c(50, 75, 100, 150, 200)){
+for(i in c(200, 150, 100, 75, 50)){
   if (nrow(out) < y){ # if we haven't placed all of the candidates yet
     # define the samples that can be ligated at the current ng
     ng <- dig %>%
@@ -48,7 +53,7 @@ for(i in c(50, 75, 100, 150, 200)){
       arrange(quant)
     # pull out  pools
       for (j in seq(nrow(reg))){
-        if(nrow(ng) >=47){
+        while(nrow(ng) >=47){
         pool <- ng %>% 
           slice(1:47) %>% 
           mutate(pool = paste("pool", i, j, sep = "_"))
@@ -66,6 +71,33 @@ for(i in c(50, 75, 100, 150, 200)){
   }
   
 }
+# the above script stops when you run out of regenos - use below to keep going
+for(i in c(200, 150, 100, 75, 50)){
+  if (nrow(out) < y){ # if we haven't placed all of the candidates yet
+    # define the samples that can be ligated at the current ng
+    ng <- dig %>%
+      mutate(uL_in = round(i/quant, 1)) %>% # round to 1 decimal point
+      filter(uL_in < 22.2 & uL_in > 0.5) %>%
+      mutate(water = round(22.2-uL_in, 1), 
+        DNA = i) %>% 
+      arrange(plate)
+    # pull out  pools
+      while(nrow(ng) >=48){
+        pool <- ng %>% 
+          slice(1:48) %>% 
+          mutate(pool = paste("pool", i, sep = "_"))
+        ng <- anti_join(ng, pool, by ="digest_id")
+        out <- rbind(out, pool)
+        
+      }
+    }
+    dig <- anti_join(dig, out, by = "digest_id")
+  
+  }
+  
+
+
+
 
 out <- out %>% 
   rename(source_well = well, 
